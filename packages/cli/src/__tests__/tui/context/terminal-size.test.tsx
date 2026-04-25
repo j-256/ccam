@@ -62,9 +62,10 @@ describe('TerminalSizeProvider', () => {
     Object.defineProperty(process.stdout, 'rows', { value: 50, writable: true, configurable: true });
     process.stdout.emit('resize');
 
-    // Wait for React state update
-    await new Promise((r) => setTimeout(r, 50));
-    expect(lastFrame()).toContain('200x50');
+    // Poll until the resize event has propagated through React state
+    await vi.waitFor(() => {
+      expect(lastFrame()).toContain('200x50');
+    });
   });
 
   it('cleans up resize listener on unmount', () => {

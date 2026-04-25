@@ -65,9 +65,10 @@ describe('NavigationProvider', () => {
         <NavPusher entry={orgList} />
       </NavigationProvider>,
     );
-    // After push effect runs
-    await new Promise((r) => setTimeout(r, 50));
-    expect(lastFrame()).toContain('view:org-list');
+    // Poll until the push effect has flushed; avoids fixed-timeout flakes under load
+    await vi.waitFor(() => {
+      expect(lastFrame()).toContain('view:org-list');
+    });
     expect(lastFrame()).toContain('crumbs:Home>Orgs');
     expect(lastFrame()).toContain('back:true');
   });
@@ -78,11 +79,12 @@ describe('NavigationProvider', () => {
         <NavPopper pushFirst={orgList} />
       </NavigationProvider>,
     );
-    // After push + pop effects run
-    await new Promise((r) => setTimeout(r, 100));
+    // Poll until both push and pop have flushed (back:false is the pop-completed signal)
+    await vi.waitFor(() => {
+      expect(lastFrame()).toContain('back:false');
+    });
     expect(lastFrame()).toContain('view:resource-picker');
     expect(lastFrame()).toContain('crumbs:Home');
-    expect(lastFrame()).toContain('back:false');
   });
 
   it('throws when useNav is called outside provider', () => {
@@ -111,7 +113,8 @@ describe('NavigationProvider', () => {
         <ParamChecker />
       </NavigationProvider>,
     );
-    await new Promise((r) => setTimeout(r, 50));
-    expect(lastFrame()).toContain('params:{"id":"1"}');
+    await vi.waitFor(() => {
+      expect(lastFrame()).toContain('params:{"id":"1"}');
+    });
   });
 });
