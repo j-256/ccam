@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why are you running this?"
+        required: false
+        type: string
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Note manual trigger reason
+        if: github.event_name == 'workflow_dispatch' && inputs.reason != ''
+        env:
+          REASON: ${{ inputs.reason }}
+        run: echo "**Triggered manually:** $REASON" >> "$GITHUB_STEP_SUMMARY"
+      - run: npm ci
+      - name: Lint @ccam/sdk
+        run: |
+          printf '\n**@ccam/sdk lint**\n\n' >> "$GITHUB_STEP_SUMMARY"
+          npx eslint packages/sdk/src 2>&1 | tee eslint-sdk.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -eq 0 ]; then
+            echo '✅ No problems' >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo '```'
+              cat eslint-sdk.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit "$status"
+          fi
+      - name: Lint ccam
+        run: |
+          printf '\n**ccam (CLI) lint**\n\n' >> "$GITHUB_STEP_SUMMARY"
+          npx eslint packages/cli/src 2>&1 | tee eslint-cli.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -eq 0 ]; then
+            echo '✅ No problems' >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo '```'
+              cat eslint-cli.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit "$status"
+          fi
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Note manual trigger reason
+        if: github.event_name == 'workflow_dispatch' && inputs.reason != ''
+        env:
+          REASON: ${{ inputs.reason }}
+        run: echo "**Triggered manually:** $REASON" >> "$GITHUB_STEP_SUMMARY"
+      - run: npm ci
+      - name: Build @ccam/sdk
+        run: |
+          printf '\n**@ccam/sdk build**\n\n' >> "$GITHUB_STEP_SUMMARY"
+          npm run build -w packages/sdk
+          echo '✅ tsc succeeded' >> "$GITHUB_STEP_SUMMARY"
+      - name: Build ccam
+        run: |
+          printf '\n**ccam (CLI) build**\n\n' >> "$GITHUB_STEP_SUMMARY"
+          npm run build -w packages/cli
+          echo '✅ tsc succeeded' >> "$GITHUB_STEP_SUMMARY"
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Note manual trigger reason
+        if: github.event_name == 'workflow_dispatch' && inputs.reason != ''
+        env:
+          REASON: ${{ inputs.reason }}
+        run: echo "**Triggered manually:** $REASON" >> "$GITHUB_STEP_SUMMARY"
+      - run: npm ci
+      - run: npm run build -w packages/sdk
+      - name: Test @ccam/sdk
+        run: |
+          printf '\n**@ccam/sdk tests**\n\n' >> "$GITHUB_STEP_SUMMARY"
+          npm test -w packages/sdk
+      - name: Test ccam
+        run: |
+          printf '\n**ccam (CLI) tests**\n\n' >> "$GITHUB_STEP_SUMMARY"
+          npm test -w packages/cli

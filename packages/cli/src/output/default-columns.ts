@@ -1,0 +1,15 @@
+export const DEFAULT_COLUMNS: Record<string, string[]> = {
+  user: ['mail', 'firstName', 'lastName', 'userState', 'primaryOrganization', 'lastLoginDate', 'roles'],
+  userDetail: ['id', 'mail', 'firstName', 'lastName', 'displayName', 'userState', 'primaryOrganization', 'organizations', 'roles', 'lastLoginDate', 'createdAt', 'lastModified'],
+  role: ['description', 'id', 'serviceType', 'scope', 'targetType', 'privileged', 'twoFAEnabled'],
+  roleDetail: ['description', 'id', 'serviceType', 'scope', 'targetType', 'privileged', 'twoFAEnabled', 'permissions'],
+  org: ['name', 'id', 'type', 'twoFAEnabled'],
+  orgDetail: ['name', 'id', 'type', 'twoFAEnabled', 'emailDomains', 'sfAccountIds', 'realms'],
+  client: ['id', 'name', 'active', 'organizationCount', 'tokenEndpointAuthMethod', 'lastAuthenticatedDate'],
+  clientDetail: ['id', 'name', 'description', 'active', 'organizations', 'roles', 'scopes', 'tokenEndpointAuthMethod', 'lastAuthenticatedDate', 'createdAt'],
+  instance: ['id', 'description', 'podId', 'tenantType'],
+  realm: ['id', 'description', 'customerName', 'organizationId'],
+  permission: ['name', 'adminPermission'],
+  serviceType: ['id', 'description'],
+  auditLog: ['timestamp', 'eventType', 'eventMessage', 'authorDisplayName', 'authorEmail'],
+};

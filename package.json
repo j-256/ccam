@@ -1,0 +1,28 @@
+{
+  "name": "ccam-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm run build -w packages/sdk && npm run build -w packages/cli",
+    "test": "npm run test --workspaces",
+    "lint": "eslint packages/*/src",
+    "format": "prettier --write 'packages/*/src/**/*.ts'",
+    "release": "node scripts/release.js",
+    "test:integration": "npm run test:integration -w packages/sdk"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "esbuild": "^0.28.0",
+    "eslint": "^10.2.0",
+    "prettier": "^3.8.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.58.1",
+    "vitest": "^4.1.4"
+  }
+}

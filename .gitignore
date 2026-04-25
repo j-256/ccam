@@ -1,0 +1,12 @@
+.DS_Store
+node_modules/
+dist/
+*.tsbuildinfo
+.superpowers/
+docs/superpowers/
+coverage/
+.env
+.env.integration.*
+release/
+.worktrees/
+docs/internal/
