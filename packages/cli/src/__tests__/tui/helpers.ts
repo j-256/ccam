@@ -42,7 +42,6 @@ export function createMockClient(): CcamClient {
     roles: {
       list: vi.fn(),
       get: vi.fn(),
-      auditLogs: vi.fn(),
     },
     realms: {
       list: vi.fn(),

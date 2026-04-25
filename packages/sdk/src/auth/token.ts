@@ -82,6 +82,12 @@ export class TokenManager {
       );
     }
     const data = await response.json() as { access_token: string; expires_in: number; refresh_token?: string };
+    if (typeof data.access_token !== 'string' || typeof data.expires_in !== 'number') {
+      throw new CcamOAuthError(
+        'Token refresh failed: malformed response',
+        { status: response.status, resource: 'auth', operation: 'refresh_token', rawBody: JSON.stringify(data) },
+      );
+    }
     const next: TokenCache = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token ?? refreshToken,
@@ -106,6 +112,13 @@ export class TokenManager {
       );
     }
     const data = await response.json() as { access_token: string; expires_in: number; refresh_token?: string };
+    if (typeof data.access_token !== 'string' || typeof data.expires_in !== 'number') {
+      const grant = this.user && this.userPassword ? 'password' : 'client_credentials';
+      throw new CcamOAuthError(
+        'Token acquisition failed: malformed response',
+        { status: response.status, resource: 'auth', operation: grant, rawBody: JSON.stringify(data) },
+      );
+    }
     const next: TokenCache = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,

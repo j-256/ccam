@@ -5,8 +5,10 @@ import { SubResourceTab } from '../../../tui/components/SubResourceTab.js';
 import { ClientProvider } from '../../../tui/context/client.js';
 import { NavigationProvider, useNav } from '../../../tui/context/navigation.js';
 import { TerminalSizeProvider } from '../../../tui/context/terminal-size.js';
-import type { TabConfig, ViewEntry } from '../../../tui/types.js';
+import type { LocalTabConfig, PaginatedTabConfig, ViewEntry } from '../../../tui/types.js';
 import { createMockClient, delay } from '../helpers.js';
+
+type SubResourceTabConfig = LocalTabConfig | PaginatedTabConfig;
 
 const home: ViewEntry = { view: 'resource-picker', label: 'Home' };
 
@@ -36,7 +38,7 @@ function NavState() {
 }
 
 function renderSubResourceTab(
-  tab: TabConfig,
+  tab: SubResourceTabConfig,
   parentId: string,
   client?: ReturnType<typeof createMockClient>,
 ) {
@@ -53,7 +55,7 @@ function renderSubResourceTab(
   );
 }
 
-function makeLocalTab(overrides?: Partial<TabConfig>): TabConfig {
+function makeLocalTab(overrides?: Partial<LocalTabConfig>): LocalTabConfig {
   return {
     key: 'roles',
     label: 'Roles',
@@ -212,7 +214,7 @@ describe('SubResourceTab', () => {
   });
 
   describe('paginated type', () => {
-    function makePaginatedTab(overrides?: Partial<TabConfig>): TabConfig {
+    function makePaginatedTab(overrides?: Partial<PaginatedTabConfig>): PaginatedTabConfig {
       return {
         key: 'instances',
         label: 'Instances',

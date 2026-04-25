@@ -27,6 +27,7 @@ export interface CcamClientTokenManagerOptions {
 export type CcamClientOptions = CcamClientCredentialOptions | CcamClientTokenManagerOptions;
 
 export class CcamClient {
+  /** @internal Escape hatch for untyped HTTP calls. Prefer typed resource methods. */
   readonly http: HttpClient;
   private readonly tokenManager: TokenManager;
 
@@ -75,6 +76,11 @@ export class CcamClient {
     this.organizationConfiguration = new OrganizationConfigurationResource(this.http);
   }
 
+  /**
+   * Returns the underlying TokenManager. Used by the CLI's `auth token`
+   * command to mint or refresh a token without making an API call.
+   * Not part of the primary SDK surface for typical consumers.
+   */
   getTokenManager(): TokenManager {
     return this.tokenManager;
   }

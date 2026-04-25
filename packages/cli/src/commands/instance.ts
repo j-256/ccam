@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { addGlobalOptions, resolveGlobalOptions, type GlobalOptions } from '../shared.js';
+import { addGlobalOptions, resolveGlobalOptions, writePageInfoIfTable, type GlobalOptions } from '../shared.js';
 import { resolveProfile } from '../auth/profile-resolver.js';
 import { createClientFromResolved } from '../client-factory.js';
 import { handleError } from '../error-handler.js';
@@ -92,13 +92,7 @@ async function listInstances(options: InstanceListOptions): Promise<void> {
     const data = result && typeof result === 'object' && 'content' in result ? result.content : result;
     renderOutput(data, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.instance });
 
-    // Write pagination info to stderr for table format
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
+    writePageInfoIfTable(format, result);
   } catch (err) {
     handleError(err);
   }

@@ -1,10 +1,13 @@
 import { Command } from 'commander';
-import { addGlobalOptions, resolveGlobalOptions, type GlobalOptions } from '../shared.js';
+import { addGlobalOptions, parseExpand, resolveGlobalOptions, writePageInfoIfTable, type GlobalOptions } from '../shared.js';
 import { resolveProfile } from '../auth/profile-resolver.js';
 import { createClientFromResolved } from '../client-factory.js';
 import { handleError } from '../error-handler.js';
 import { renderOutput, resolveFormat } from '../output/index.js';
 import { DEFAULT_COLUMNS } from '../output/default-columns.js';
+
+const USER_GET_EXPAND = ['organizations', 'roles', 'organizations,roles'] as const;
+const USER_GET_BY_LOGIN_EXPAND = ['organizations'] as const;
 
 interface UserFilters {
   login?: string;
@@ -160,13 +163,7 @@ async function listUsers(options: UserListOptions): Promise<void> {
     const data = result && typeof result === 'object' && 'content' in result ? result.content : result;
     renderOutput(data, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.user });
 
-    // Write pagination info to stderr for table format
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
+    writePageInfoIfTable(format, result);
   } catch (err) {
     handleError(err);
   }
@@ -183,13 +180,20 @@ async function getUser(loginOrId: string, options: UserGetOptions): Promise<void
 
     let result;
     if (options.id) {
-      result = options.expand
-        ? await (client.users.get as (id: string, opts?: { expand?: string }) => Promise<unknown>)(loginOrId, { expand: options.expand })
-        : await client.users.get(loginOrId);
+      const expand = parseExpand(options.expand, USER_GET_EXPAND);
+      // Branch on the literal expand value so TypeScript can pick the right overload.
+      if (expand === 'organizations') {
+        result = await client.users.get(loginOrId, { expand });
+      } else if (expand === 'roles') {
+        result = await client.users.get(loginOrId, { expand });
+      } else if (expand === 'organizations,roles') {
+        result = await client.users.get(loginOrId, { expand });
+      } else {
+        result = await client.users.get(loginOrId);
+      }
     } else {
-      result = options.expand
-        ? await (client.users.getByLogin as (login: string, opts?: { expand?: string }) => Promise<unknown>)(loginOrId, { expand: options.expand })
-        : await client.users.getByLogin(loginOrId);
+      const expand = parseExpand(options.expand, USER_GET_BY_LOGIN_EXPAND);
+      result = expand ? await client.users.getByLogin(loginOrId, { expand }) : await client.users.getByLogin(loginOrId);
     }
 
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
@@ -208,9 +212,18 @@ async function currentUser(options: UserCurrentOptions): Promise<void> {
     });
     const client = await createClientFromResolved(profileResolved);
 
-    const result = options.expand
-      ? await (client.users.current as (opts?: { expand?: string }) => Promise<unknown>)({ expand: options.expand })
-      : await client.users.current();
+    const expand = parseExpand(options.expand, USER_GET_EXPAND);
+    // Branch on the literal expand value so TypeScript can pick the right overload.
+    let result;
+    if (expand === 'organizations') {
+      result = await client.users.current({ expand });
+    } else if (expand === 'roles') {
+      result = await client.users.current({ expand });
+    } else if (expand === 'organizations,roles') {
+      result = await client.users.current({ expand });
+    } else {
+      result = await client.users.current();
+    }
 
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.userDetail });
@@ -239,14 +252,6 @@ async function auditUser(login: string, options: UserAuditOptions): Promise<void
 
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result.content, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.auditLog });
-
-    // Write pagination info to stderr for table format
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
   } catch (err) {
     handleError(err);
   }

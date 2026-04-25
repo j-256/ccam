@@ -24,10 +24,19 @@ export interface Role {
   /** List of permission names granted by this role */
   permissions: string[];
 
-  /** Scope indicating if role applies globally or to specific instances */
+  /**
+   * Scope indicating if role applies globally or to specific instances.
+   * Union with `string` is intentional: the server may add scopes; prefer
+   * comparing against {@link RoleScope} values but tolerate unknown strings.
+   */
   scope: RoleScope | string;
 
-  /** Target type indicating what this role can be assigned to (User, ApiClient, or null) */
+  /**
+   * Target type indicating what this role can be assigned to (User, ApiClient,
+   * or null). Union with `string` is intentional: the server may add target
+   * types; prefer comparing against {@link RoleTargetType} values but tolerate
+   * unknown strings.
+   */
   targetType: RoleTargetType | string | null;
 
   /** Whether two-factor authentication is required for this role */

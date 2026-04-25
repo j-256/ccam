@@ -5,7 +5,7 @@ import type { Link } from './common.js';
  * Permissions are grouped into roles.
  */
 export interface Permission {
-  /** Unique name of the permission (e.g. "READ_USER", "WRITE_ORG") */
+  /** Unique name of the permission (e.g. "READ_USER", "WRITE_ORGANIZATION") */
   name: string;
 
   /** Whether this is an administrative permission requiring elevated access */

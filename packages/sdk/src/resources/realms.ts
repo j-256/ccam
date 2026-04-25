@@ -1,9 +1,14 @@
 import type { HttpClient } from '../client.js';
-import type { Realm, PagedResponse, PaginationOptions, SortOption } from '../types/index.js';
+import type { Realm, PagedResponse, PaginationOptions, SortOption, RealmSortField } from '../types/index.js';
 import { formatSort } from './sort.js';
 
 export interface ListRealmsOptions extends PaginationOptions {
-  sort?: SortOption<string>;
+  /**
+   * Sort field. Prefer values from {@link RealmSortField} for IDE autocomplete
+   * and to avoid server-side 400 on non-sortable fields. Accepts any string
+   * to tolerate server-side additions.
+   */
+  sort?: SortOption<RealmSortField | string>;
 }
 
 /**

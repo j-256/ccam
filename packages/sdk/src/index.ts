@@ -51,6 +51,7 @@ export type {
   AuditLogRecord,
   OrganizationConfiguration,
   UpdateOrganizationRequest,
+  SfMyDomainVerificationResponse,
   CreateApiClientRequest,
   UpdateApiClientRequest,
   SetPasswordRequest,

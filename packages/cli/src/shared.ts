@@ -35,6 +35,9 @@ export function parseFields(value: string | undefined): string[] | undefined {
 export function parseSort(value: string | undefined): ParsedSort | undefined {
   if (!value) return undefined;
   const [field, direction = 'asc'] = value.split(':');
+  if (!field) {
+    throw new Error(`Invalid sort field: empty. Use "field:asc" or "field:desc"`);
+  }
   if (direction !== 'asc' && direction !== 'desc') {
     throw new Error(`Invalid sort direction: "${direction}". Use "asc" or "desc"`);
   }
@@ -50,6 +53,28 @@ export function parsePageSize(value: string | undefined, defaultValue?: number):
   return parsed;
 }
 
+/**
+ * Parse and validate a user-provided --expand flag against an allowed set.
+ * Throws with a clear message on unknown values, so the user gets a CLI error
+ * instead of the AM server silently ignoring the parameter.
+ *
+ * @param input - raw --expand value (e.g. 'organizations')
+ * @param allowed - array of allowed expand tokens for this endpoint
+ * @returns the validated expand value, or undefined if input was undefined
+ */
+export function parseExpand<T extends string>(
+  input: string | undefined,
+  allowed: readonly T[],
+): T | undefined {
+  if (input === undefined) return undefined;
+  if (!(allowed as readonly string[]).includes(input)) {
+    throw new Error(
+      `Invalid --expand value: "${input}". Allowed: ${allowed.join(', ')}`,
+    );
+  }
+  return input as T;
+}
+
 export function addGlobalOptions(cmd: Command): Command {
   return cmd
     .option('--format <format>', 'Output format: table, json, csv, tsv, yaml')
@@ -58,8 +83,22 @@ export function addGlobalOptions(cmd: Command): Command {
     .option('--size <size>', 'Page size for pagination', '25')
     .option('--sort <sort>', 'Sort field and direction (e.g., name:asc)')
     .option('--profile <profile>', 'Profile name from config')
-    .option('--host <host>', 'API host URL override')
+    .option('--host <host>', 'API host URL (default: https://account.demandware.com)')
     .option('-j, --json', 'Shorthand for --format json');
+}
+
+/**
+ * Write "Page X of Y (N total)" to stderr if the format is 'table' and the
+ * result has page metadata. No-op otherwise.
+ */
+export function writePageInfoIfTable(format: string, result: unknown): void {
+  if (format !== 'table') return;
+  if (!result || typeof result !== 'object') return;
+  if (!('page' in result)) return;
+  const page = (result as { page: { number: number; totalPages: number; totalElements: number; size: number } }).page;
+  process.stderr.write(
+    `Page ${page.number + 1} of ${page.totalPages} (${page.totalElements} total)\n`,
+  );
 }
 
 export function resolveGlobalOptions(opts: GlobalOptions): ResolvedGlobalOptions {

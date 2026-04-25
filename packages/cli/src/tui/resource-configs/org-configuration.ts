@@ -12,6 +12,11 @@ export const orgConfigurationConfig: ResourceConfig = {
     { key: 'allowedSfMyDomainSuffixes', label: 'Allowed SF My Domain Suffixes', width: 5, format: formatArray },
   ],
 
+  /**
+   * OrganizationConfiguration is a singleton with no `id` field. The TUI
+   * list view expects an `id`, so we synthesize one here (`'organization-configuration'`)
+   * for display purposes only. Callers of the SDK see no such field.
+   */
   listFn: (c: CcamClient) =>
     c.organizationConfiguration.get().then(
       (config) =>

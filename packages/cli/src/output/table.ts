@@ -1,5 +1,6 @@
 import Table from 'cli-table3';
 import chalk from 'chalk';
+import { extractColumns, getNestedValue } from './shared.js';
 
 const MAX_CELL_LENGTH = 60;
 
@@ -42,23 +43,6 @@ export function formatTable(data: unknown, fields?: string[]): string {
   return table.toString();
 }
 
-function extractColumns(data: unknown[]): string[] {
-  const columns = new Set<string>();
-  for (const item of data) {
-    if (typeof item === 'object' && item !== null) {
-      Object.keys(item).forEach((key) => columns.add(key));
-    }
-  }
-  return Array.from(columns);
-}
-
-function getNestedValue(obj: unknown, path: string): unknown {
-  if (typeof obj !== 'object' || obj === null) {
-    return undefined;
-  }
-  return (obj as Record<string, unknown>)[path];
-}
-
 function formatCell(value: unknown): string {
   if (value === null || value === undefined) {
     return chalk.dim('-');
@@ -74,15 +58,13 @@ function formatCell(value: unknown): string {
     stringValue = String(value);
   }
 
-  // Apply color coding for known status values
-  stringValue = colorizeStatus(stringValue);
-
-  // Truncate long values
+  // Truncate long values before colorizing so ANSI escapes aren't split.
   if (stringValue.length > MAX_CELL_LENGTH) {
-    return stringValue.slice(0, MAX_CELL_LENGTH - 3) + '...';
+    stringValue = stringValue.slice(0, MAX_CELL_LENGTH - 3) + '...';
   }
 
-  return stringValue;
+  // Apply color coding for known status values after truncation.
+  return colorizeStatus(stringValue);
 }
 
 function colorizeStatus(value: string): string {

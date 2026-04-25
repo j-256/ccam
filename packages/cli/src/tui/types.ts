@@ -84,19 +84,55 @@ export interface CrossLinkDef {
 // Tab configuration for detail views
 // ---------------------------------------------------------------------------
 
-export interface TabConfig {
+interface TabConfigBase {
   key: string;
   label: string;
+  columns: ColumnDef[];
+  crossLinkTo?: ViewType; // makes rows navigable
+}
+
+/**
+ * Tab that fetches a single batch of records from the server and sorts/filters
+ * client-side. fetchFn takes only the parent id.
+ */
+export interface LocalTabConfig extends TabConfigBase {
+  type: 'local';
+  fetchFn: (
+    client: CcamClient,
+    id: string,
+  ) => Promise<ContentResponse<Record<string, unknown>>>;
+}
+
+/**
+ * Tab that pages through results server-side. fetchFn takes the parent id plus
+ * page/size. Return type is a PagedResponse when the backing endpoint paginates
+ * and a ContentResponse otherwise -- both shapes are handled by the consumer
+ * hook.
+ */
+export interface PaginatedTabConfig extends TabConfigBase {
+  type: 'paginated';
   fetchFn: (
     client: CcamClient,
     id: string,
     page?: number,
     size?: number,
-  ) => Promise<ContentResponse<Record<string, unknown>> | PagedResponse<Record<string, unknown>>>;
-  columns: ColumnDef[];
-  crossLinkTo?: ViewType; // makes rows navigable
-  type: 'local' | 'paginated' | 'audit';
+  ) => Promise<PagedResponse<Record<string, unknown>> | ContentResponse<Record<string, unknown>>>;
 }
+
+/**
+ * Tab that fetches an audit log. fetchFn takes the parent id plus an optional
+ * querySize (initial window; the consumer can expand via `load more`).
+ */
+export interface AuditTabConfig extends TabConfigBase {
+  type: 'audit';
+  fetchFn: (
+    client: CcamClient,
+    id: string,
+    querySize?: number,
+  ) => Promise<ContentResponse<Record<string, unknown>>>;
+}
+
+export type TabConfig = LocalTabConfig | PaginatedTabConfig | AuditTabConfig;
 
 // ---------------------------------------------------------------------------
 // Resource configuration -- drives both list and detail views

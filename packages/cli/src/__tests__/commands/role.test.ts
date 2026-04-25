@@ -107,17 +107,25 @@ describe('role commands', () => {
       });
     });
 
-    it('does not pass expand when not serviceType', async () => {
+    it('rejects invalid --expand value on list', async () => {
+      const errorHandler = await import('../../error-handler.js');
+      const handleErrorMock = vi
+        .mocked(errorHandler.handleError)
+        .mockImplementation(() => {
+          throw new Error('exit');
+        });
+
       const program = new Command();
       registerRoleCommands(program);
 
-      await program.parseAsync(['node', 'test', 'role', 'list', '--expand', 'other']);
+      await expect(
+        program.parseAsync(['node', 'test', 'role', 'list', '--expand', 'other']),
+      ).rejects.toThrow();
 
-      expect(mockRoles.list).toHaveBeenCalledWith({
-        page: 0,
-        size: 25,
-        sort: undefined,
-      });
+      expect(handleErrorMock).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringMatching(/Invalid --expand/) }),
+      );
+      expect(mockRoles.list).not.toHaveBeenCalled();
     });
   });
 
@@ -138,6 +146,30 @@ describe('role commands', () => {
       await program.parseAsync(['node', 'test', 'role', 'get', 'role-123', '--expand', 'serviceType']);
 
       expect(mockRoles.get).toHaveBeenCalledWith('role-123', { expand: 'serviceType' });
+    });
+
+    it('rejects invalid --expand value with a clear error', async () => {
+      const errorHandler = await import('../../error-handler.js');
+      const handleErrorMock = vi
+        .mocked(errorHandler.handleError)
+        .mockImplementation(() => {
+          throw new Error('exit');
+        });
+
+      const program = new Command();
+      registerRoleCommands(program);
+
+      await expect(
+        program.parseAsync(['node', 'test', 'role', 'get', 'role-123', '--expand', 'serviceType2']),
+      ).rejects.toThrow();
+
+      expect(handleErrorMock).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringMatching(/Invalid --expand/) }),
+      );
+      expect(mockRoles.get).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ expand: 'serviceType2' }),
+      );
     });
   });
 

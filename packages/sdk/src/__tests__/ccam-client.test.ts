@@ -9,6 +9,8 @@ import {
   RealmsResource,
   PermissionsResource,
   ServiceTypesResource,
+  InstancesResource,
+  OrganizationConfigurationResource,
 } from '../resources/index.js';
 
 describe('CcamClient', () => {
@@ -86,6 +88,8 @@ describe('CcamClient', () => {
     expect(client.realms).toBeInstanceOf(RealmsResource);
     expect(client.permissions).toBeInstanceOf(PermissionsResource);
     expect(client.serviceTypes).toBeInstanceOf(ServiceTypesResource);
+    expect(client.instances).toBeInstanceOf(InstancesResource);
+    expect(client.organizationConfiguration).toBeInstanceOf(OrganizationConfigurationResource);
   });
 
   it('accepts a pre-built TokenManager instead of credentials', () => {

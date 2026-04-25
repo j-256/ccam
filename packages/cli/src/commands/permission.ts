@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { addGlobalOptions, resolveGlobalOptions, type GlobalOptions } from '../shared.js';
+import { addGlobalOptions, resolveGlobalOptions, writePageInfoIfTable, type GlobalOptions } from '../shared.js';
 import { resolveProfile } from '../auth/profile-resolver.js';
 import { createClientFromResolved } from '../client-factory.js';
 import { handleError } from '../error-handler.js';
@@ -46,13 +46,7 @@ async function listPermissions(options: PermissionListOptions): Promise<void> {
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result.content, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.permission });
 
-    // Write pagination info to stderr for table format
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
+    writePageInfoIfTable(format, result);
   } catch (err) {
     handleError(err);
   }
@@ -75,7 +69,7 @@ export function registerPermissionCommands(program: Command): void {
   // permission get
   const get = permission
     .command('get')
-    .argument('<name>', 'Permission name (e.g. "READ_USER", "WRITE_ORG")')
+    .argument('<name>', 'Permission name (e.g. "READ_USER", "WRITE_ORGANIZATION")')
     .description('Get a specific permission');
 
   addGlobalOptions(get).action(getPermission);

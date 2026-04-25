@@ -250,6 +250,23 @@ describe('user commands', () => {
         sort: { field: 'email', direction: 'desc' },
       });
     });
+
+    it('--all without --org writes error to stderr and exits', async () => {
+      const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+      const program = new Command();
+      registerUserCommands(program);
+
+      await program.parseAsync(['node', 'test', 'user', 'list', '--all']);
+
+      expect(stderrSpy).toHaveBeenCalledWith(expect.stringMatching(/--all requires --org/));
+      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(mockUsers.search.findAllByOrg).not.toHaveBeenCalled();
+
+      stderrSpy.mockRestore();
+      exitSpy.mockRestore();
+    });
   });
 
   describe('user get', () => {
@@ -275,9 +292,29 @@ describe('user commands', () => {
       const program = new Command();
       registerUserCommands(program);
 
-      await program.parseAsync(['node', 'test', 'user', 'get', 'user@example.com', '--expand', 'organizations,roles']);
+      await program.parseAsync(['node', 'test', 'user', 'get', 'user@example.com', '--expand', 'organizations']);
 
-      expect(mockUsers.getByLogin).toHaveBeenCalledWith('user@example.com', { expand: 'organizations,roles' });
+      expect(mockUsers.getByLogin).toHaveBeenCalledWith('user@example.com', { expand: 'organizations' });
+    });
+
+    it('rejects --expand values not supported by getByLogin (organizations,roles is only for --id)', async () => {
+      const errorHandler = await import('../../error-handler.js');
+      const handleErrorMock = vi
+        .mocked(errorHandler.handleError)
+        .mockImplementation(() => {
+          throw new Error('exit');
+        });
+
+      const program = new Command();
+      registerUserCommands(program);
+
+      await expect(
+        program.parseAsync(['node', 'test', 'user', 'get', 'user@example.com', '--expand', 'organizations,roles']),
+      ).rejects.toThrow();
+
+      expect(handleErrorMock).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringMatching(/Invalid --expand/) }),
+      );
     });
 
     it('passes expand parameter to get when --id is used', async () => {
@@ -287,6 +324,30 @@ describe('user commands', () => {
       await program.parseAsync(['node', 'test', 'user', 'get', 'user-123', '--id', '--expand', 'organizations']);
 
       expect(mockUsers.get).toHaveBeenCalledWith('user-123', { expand: 'organizations' });
+    });
+
+    it('rejects invalid --expand value with a clear error', async () => {
+      const errorHandler = await import('../../error-handler.js');
+      const handleErrorMock = vi
+        .mocked(errorHandler.handleError)
+        .mockImplementation(() => {
+          throw new Error('exit');
+        });
+
+      const program = new Command();
+      registerUserCommands(program);
+
+      await expect(
+        program.parseAsync(['node', 'test', 'user', 'get', 'alice@example.com', '--expand', 'bogus']),
+      ).rejects.toThrow();
+
+      expect(handleErrorMock).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringMatching(/Invalid --expand/) }),
+      );
+      expect(mockUsers.getByLogin).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ expand: 'bogus' }),
+      );
     });
   });
 

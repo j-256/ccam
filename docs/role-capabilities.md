@@ -154,7 +154,7 @@ Matrix of SDK methods vs. roles. ✅ = allowed. The required permission for each
 | `apiClients.auditLogs` | `READ_AUDIT_LOG_APICLIENT` | ✅ | ✅ | ❌ | ✅ |
 | `apiClients.create` | `CREATE_APICLIENT` | ✅ | ✅ | ❌ | ❌ |
 | `apiClients.update` / `apiClients.setPassword` / `apiClients.setAuthType` | `WRITE_APICLIENT` | ✅ | ✅ | ❌ | ❌ |
-| `apiClients.delete(id)` | `DELETE_APICLIENT` | ✅ | ✅ | ❌ | ❌ |
+| `apiClients.delete(id)` ¹ | `DELETE_APICLIENT` | ✅ | ✅ | ❌ | ❌ |
 | `organizations.list` / `organizations.get` / `organizations.search.*` | `READ_ORGANIZATION` | ✅ | ✅ | ✅ | ✅ |
 | `organizations.realms` / `organizations.instances` | `READ_ORGANIZATION` | ✅ | ✅ | ✅ | ✅ |
 | `organizations.auditLogs` | `READ_AUDIT_LOG_ORGANIZATION` | ✅ | ❌ | ❌ | ✅ |
@@ -167,4 +167,4 @@ Matrix of SDK methods vs. roles. ✅ = allowed. The required permission for each
 | `permissions.list` / `permissions.get` | _(any authenticated)_ | ✅ | ✅ | ✅ | ✅ |
 | `organizationConfiguration.get` | _(any authenticated)_ | ✅ | ✅ | ✅ | ✅ |
 
-`apiClients.delete(id)` is granted by Account Administrator and API Administrator, but the server will reject the deletion with `412 Precondition Failed` unless the API client has been disabled for at least 7 days. Set `active: false` via `apiClients.update` first, then wait out the cooldown.
+¹ `apiClients.delete(id)` is granted by Account Administrator and API Administrator, but the server will reject the deletion with `412 Precondition Failed` unless the API client has been disabled for at least 7 days. Set `active: false` via `apiClients.update` first, then wait out the cooldown.

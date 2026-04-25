@@ -93,6 +93,26 @@ describe('ProfileStore.saveProfile', () => {
     const stat = await fs.stat(path.join(tempDir, 'ccam', 'credentials'));
     expect(stat.mode & 0o777).toBe(0o600);
   });
+
+  it('creates the config dir with mode 0o700', async () => {
+    const store = new ProfileStore();
+    await store.saveProfile('default', {
+      config: { host: 'https://am.example', clientId: 'cid' },
+      credentials: { refreshToken: 'r1' },
+    });
+    const stat = await fs.stat(path.join(tempDir, 'ccam'));
+    expect(stat.mode & 0o777).toBe(0o700);
+  });
+
+  it('chmods an existing config dir to 0o700', async () => {
+    const configDir = path.join(tempDir, 'ccam');
+    await fs.mkdir(configDir, { recursive: true, mode: 0o755 });
+    await fs.chmod(configDir, 0o755);
+    const store = new ProfileStore();
+    await store.saveProfile('x', { config: { host: 'h', clientId: 'c' }, credentials: {} });
+    const stat = await fs.stat(configDir);
+    expect(stat.mode & 0o777).toBe(0o700);
+  });
 });
 
 describe('ProfileStore.setActiveProfile', () => {
@@ -195,6 +215,13 @@ describe('ProfileStore.updateCredentials', () => {
     await store.updateCredentials('x', { accessToken: 'a', expiresAt: 1 });
     const state = await store.read();
     expect(state.credentials.x).toEqual({ accessToken: 'a', expiresAt: 1 });
+  });
+
+  it('creates the config dir with mode 0o700 from scratch', async () => {
+    const store = new ProfileStore();
+    await store.updateCredentials('x', { accessToken: 'a', expiresAt: 1 });
+    const stat = await fs.stat(path.join(tempDir, 'ccam'));
+    expect(stat.mode & 0o777).toBe(0o700);
   });
 });
 

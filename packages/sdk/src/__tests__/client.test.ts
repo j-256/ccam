@@ -185,6 +185,29 @@ describe('HttpClient', () => {
     }
   });
 
+  it('throws CcamAuthError (not plain CcamError) on 401 with non-JSON body', async () => {
+    const htmlBody = '<html><body>Unauthorized</body></html>';
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () => htmlBody,
+    });
+
+    const client = new HttpClient({ baseUrl, getToken: mockToken, fetch: mockFetch });
+    await expect(client.get('/users', undefined, { resource: 'users', operation: 'list' }))
+      .rejects.toThrow(CcamAuthError);
+
+    try {
+      await client.get('/users', undefined, { resource: 'users', operation: 'list' });
+    } catch (err) {
+      expect(err).toBeInstanceOf(CcamAuthError);
+      if (err instanceof CcamAuthError) {
+        expect(err.status).toBe(401);
+        expect(err.message).toContain('Unauthorized');
+      }
+    }
+  });
+
   describe('post', () => {
     it('should send POST with JSON body and return parsed response', async () => {
       const responseBody = { id: '123', name: 'created' };

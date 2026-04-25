@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { addGlobalOptions, resolveGlobalOptions, type GlobalOptions } from '../shared.js';
+import { addGlobalOptions, resolveGlobalOptions, writePageInfoIfTable, type GlobalOptions } from '../shared.js';
 import { resolveProfile } from '../auth/profile-resolver.js';
 import { createClientFromResolved } from '../client-factory.js';
 import { handleError } from '../error-handler.js';
@@ -41,13 +41,7 @@ async function listServiceTypes(options: GlobalOptions): Promise<void> {
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result.content, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.serviceType });
 
-    // Write pagination info to stderr for table format
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
+    writePageInfoIfTable(format, result);
   } catch (err) {
     handleError(err);
   }

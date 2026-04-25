@@ -1,3 +1,5 @@
+import { extractColumns, getNestedValue } from './shared.js';
+
 export function formatCsv(data: unknown, fields?: string[]): string {
   return formatDelimited(data, ',', fields, true);
 }
@@ -44,23 +46,6 @@ function formatDelimited(
   });
 
   return [header, ...rows].join('\n');
-}
-
-function extractColumns(data: unknown[]): string[] {
-  const columns = new Set<string>();
-  for (const item of data) {
-    if (typeof item === 'object' && item !== null) {
-      Object.keys(item).forEach((key) => columns.add(key));
-    }
-  }
-  return Array.from(columns);
-}
-
-function getNestedValue(obj: unknown, path: string): unknown {
-  if (typeof obj !== 'object' || obj === null) {
-    return undefined;
-  }
-  return (obj as Record<string, unknown>)[path];
 }
 
 function formatValue(value: unknown): string {

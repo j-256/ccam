@@ -106,3 +106,7 @@ PUT/PATCH quirk:
 - Upsert behavior: PUT creates if the resource doesn't exist (201), updates if it does (200)
 - Some resources have restricted attributes (e.g. `realms` on organizations)
 - See `docs/am-api-reference.md` for per-endpoint details
+
+## Roles & permissions
+
+See `docs/role-capabilities.md` for the matrix of which customer roles can invoke each SDK method.

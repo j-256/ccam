@@ -17,11 +17,18 @@ import type {
   UpdateUserRequest,
   ResetUserRequest,
   DisableUserRequest,
+  UserSortField,
 } from '../types/index.js';
 import { formatSort } from './sort.js';
+import { validateQuerySize } from './validation.js';
 
 export interface ListUsersOptions extends PaginationOptions {
-  sort?: SortOption<string>;
+  /**
+   * Sort field. Prefer values from {@link UserSortField} for IDE autocomplete
+   * and to avoid server-side 400 on non-sortable fields. Accepts any string
+   * to tolerate server-side additions.
+   */
+  sort?: SortOption<UserSortField | string>;
 }
 
 /** Expand options for single-resource endpoints (get, getByLogin) */
@@ -60,6 +67,11 @@ export interface FindByOrgRealmAccessOptions extends PaginationOptions {
 export class UsersResource {
   private readonly http: HttpClient;
 
+  /**
+   * Finder methods under `/users/search`. Note: `getByLogin` is deliberately
+   * NOT under `search` — it's the one finder that returns a single User
+   * (not a ContentResponse), and is promoted as the ergonomic lookup.
+   */
   readonly search: {
     findByOrg: (opts: FindByOrgOptions) => Promise<ContentResponse<User>>;
     findAllByOrg: (opts: FindByOrgOptions) => Promise<ContentResponse<User>>;
@@ -278,6 +290,7 @@ export class UsersResource {
    * @returns List of audit log records (not paginated)
    */
   async auditLogs(id: string, opts?: AuditLogOptions): Promise<ContentResponse<AuditLogRecord>> {
+    validateQuerySize(opts?.querySize);
     const params: Record<string, unknown> | undefined = opts?.querySize !== undefined ? { querySize: opts.querySize } : undefined;
 
     return this.http.get<ContentResponse<AuditLogRecord>>(

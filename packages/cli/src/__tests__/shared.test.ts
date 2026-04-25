@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Command } from 'commander';
-import { parseFields, parsePageSize, parseSort, addGlobalOptions, resolveGlobalOptions } from '../shared.js';
+import { parseFields, parsePageSize, parseSort, parseExpand, addGlobalOptions, resolveGlobalOptions, writePageInfoIfTable } from '../shared.js';
 
 describe('parseFields', () => {
   it('splits comma-separated fields', () => {
@@ -66,6 +66,36 @@ describe('parseSort', () => {
 
   it('throws for invalid sort direction', () => {
     expect(() => parseSort('name:invalid')).toThrow('Invalid sort direction: "invalid". Use "asc" or "desc"');
+  });
+
+  it('throws for empty field', () => {
+    expect(() => parseSort(':asc')).toThrow('Invalid sort field: empty. Use "field:asc" or "field:desc"');
+  });
+
+  it('throws for empty direction after colon', () => {
+    expect(() => parseSort('name:')).toThrow('Invalid sort direction: "". Use "asc" or "desc"');
+  });
+
+  it('returns undefined for empty string', () => {
+    expect(parseSort('')).toBeUndefined();
+  });
+});
+
+describe('parseExpand', () => {
+  it('returns undefined for undefined input', () => {
+    expect(parseExpand(undefined, ['a', 'b'])).toBeUndefined();
+  });
+
+  it('returns the input when it is in the allowed list', () => {
+    expect(parseExpand('a', ['a', 'b'])).toBe('a');
+  });
+
+  it('throws with a helpful message for unknown values', () => {
+    expect(() => parseExpand('c', ['a', 'b'])).toThrow(/Invalid --expand/);
+  });
+
+  it('throws for empty string (not in allowed list)', () => {
+    expect(() => parseExpand('', ['a'])).toThrow(/Invalid --expand/);
   });
 });
 
@@ -151,5 +181,47 @@ describe('resolveGlobalOptions', () => {
   it('uses custom profile', () => {
     const resolved = resolveGlobalOptions({ profile: 'production' });
     expect(resolved.profile).toBe('production');
+  });
+});
+
+describe('writePageInfoIfTable', () => {
+  const writeSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+  afterEach(() => {
+    writeSpy.mockClear();
+  });
+
+  it('writes page info to stderr for table format with PagedResponse', () => {
+    const result = {
+      content: [{ id: 1 }, { id: 2 }],
+      page: { number: 0, size: 25, totalElements: 50, totalPages: 2 },
+    };
+    writePageInfoIfTable('table', result);
+    expect(writeSpy).toHaveBeenCalledWith('Page 1 of 2 (50 total)\n');
+  });
+
+  it('is a no-op for json format', () => {
+    const result = {
+      content: [{ id: 1 }],
+      page: { number: 0, size: 25, totalElements: 1, totalPages: 1 },
+    };
+    writePageInfoIfTable('json', result);
+    expect(writeSpy).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op for table format with ContentResponse (no page key)', () => {
+    const result = { content: [{ id: 1 }] };
+    writePageInfoIfTable('table', result);
+    expect(writeSpy).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op for null result', () => {
+    writePageInfoIfTable('table', null);
+    expect(writeSpy).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op for undefined result', () => {
+    writePageInfoIfTable('table', undefined);
+    expect(writeSpy).not.toHaveBeenCalled();
   });
 });

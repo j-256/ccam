@@ -27,6 +27,26 @@ export class CcamError extends Error {
     this.operation = options.operation;
     this.fieldErrors = options.fieldErrors ?? null;
   }
+
+  toJSON(): {
+    name: string;
+    message: string;
+    status: number;
+    code: string | null;
+    resource: string;
+    operation: string;
+    fieldErrors: FieldError[] | null;
+  } {
+    return {
+      name: this.name,
+      message: this.message,
+      status: this.status,
+      code: this.code,
+      resource: this.resource,
+      operation: this.operation,
+      fieldErrors: this.fieldErrors,
+    };
+  }
 }
 
 export class CcamAuthError extends CcamError {
@@ -53,7 +73,7 @@ export interface CcamOAuthErrorContext {
 export class CcamOAuthError extends CcamAuthError {
   readonly oauthCode: string | null;
   readonly oauthDescription: string | null;
-  readonly rawBody: string;
+  readonly rawBody!: string;
 
   constructor(prefix: string, context: CcamOAuthErrorContext) {
     const parsed = parseOAuthErrorBody(context.rawBody);
@@ -61,7 +81,12 @@ export class CcamOAuthError extends CcamAuthError {
       status: context.status, resource: context.resource, operation: context.operation,
     });
     this.name = 'CcamOAuthError';
-    this.rawBody = context.rawBody;
+    Object.defineProperty(this, 'rawBody', {
+      value: context.rawBody,
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    });
     this.oauthCode = parsed.code;
     this.oauthDescription = parsed.description;
   }
@@ -84,8 +109,10 @@ export class CcamRefreshFailedError extends CcamOAuthError {
 
 function formatOAuthMessage(prefix: string, status: number, parsed: { code: string | null; description: string | null }): string {
   const parts = [`${prefix}: HTTP ${status}`];
-  if (parsed.code) parts.push(parsed.code);
-  if (parsed.description) parts.push(`(${parsed.description})`);
+  if (parsed.code) {
+    parts.push(parsed.code);
+    parts.push(parsed.description ? `(${parsed.description})` : '(no description provided)');
+  }
   return parts.join(' ');
 }
 

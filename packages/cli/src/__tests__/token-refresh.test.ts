@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { ProfileStore } from '../../auth/profile-store.js';
-import { resolveProfile } from '../../auth/profile-resolver.js';
-import { createClientFromResolved } from '../../client-factory.js';
+import { ProfileStore } from '../auth/profile-store.js';
+import { resolveProfile } from '../auth/profile-resolver.js';
+import { createClientFromResolved } from '../client-factory.js';
 
 let tempDir: string;
 let originalXdg: string | undefined;

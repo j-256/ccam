@@ -1,3 +1,11 @@
+/**
+ * Manual-paste OAuth redirect handling for `auth login --manual`.
+ *
+ * Note: The `promptText` helper echoes input via plain readline. A user
+ * pasting the full redirect URL will briefly display the one-time `code`
+ * parameter on the terminal. Auth codes are single-use so the exposure
+ * is bounded, but be aware if you are screen-recording or screen-sharing.
+ */
 export function extractCodeFromInput(input: string, expectedState: string): string {
   const trimmed = input.trim();
   if (!trimmed) throw new Error('Pasted value was empty.');

@@ -392,6 +392,13 @@ export interface AuthShowOptions {
   name: string;
 }
 
+/**
+ * Returns the non-secret fields for a profile: host, clientId, userEmail, name.
+ *
+ * Note: clientId and host are not secrets but are semi-sensitive (useful
+ * recon for an attacker who has already obtained a secret elsewhere).
+ * Treat the contents of `profiles.yaml` accordingly before checking it in.
+ */
 export async function runAuthShow(opts: AuthShowOptions): Promise<{
   host: string;
   clientId: string;

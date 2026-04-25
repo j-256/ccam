@@ -11,6 +11,13 @@ export interface HttpClientOptions {
   fetch?: typeof fetch;
 }
 
+/**
+ * @internal
+ * Low-level HTTP client used by resource classes. Exposed for advanced
+ * use cases (e.g. calls to endpoints not yet surfaced as typed methods).
+ * Customer integrations should use the typed resource methods on `CcamClient`
+ * instead.
+ */
 export class HttpClient {
   private readonly baseUrl: string;
   private readonly getToken: () => Promise<string>;
@@ -24,8 +31,8 @@ export class HttpClient {
 
   async get<T>(
     path: string,
-    params?: Record<string, unknown>,
-    context?: ErrorContext
+    params: Record<string, unknown> | undefined,
+    context: ErrorContext
   ): Promise<T> {
     const url = this.buildUrl(path, params);
     const token = await this.getToken();
@@ -39,17 +46,22 @@ export class HttpClient {
     });
 
     if (!response.ok) {
-      await this.handleErrorResponse(response, context ?? { resource: 'unknown', operation: 'unknown' });
+      await this.handleErrorResponse(response, context);
     }
 
     return response.json() as Promise<T>;
   }
 
+  /**
+   * Empty response body is coerced to `undefined as T`. Only use `T = void`
+   * for endpoints known to return no body; a `Promise<SomeObject>` return
+   * on an empty body yields `undefined`, not a runtime error.
+   */
   async post<T>(
     path: string,
     body: unknown,
-    params?: Record<string, unknown>,
-    context?: ErrorContext
+    params: Record<string, unknown> | undefined,
+    context: ErrorContext
   ): Promise<T> {
     const url = this.buildUrl(path, params);
     const token = await this.getToken();
@@ -64,7 +76,7 @@ export class HttpClient {
     });
 
     if (!response.ok) {
-      await this.handleErrorResponse(response, context ?? { resource: 'unknown', operation: 'unknown' });
+      await this.handleErrorResponse(response, context);
     }
 
     const text = await response.text();
@@ -72,11 +84,16 @@ export class HttpClient {
     return JSON.parse(text) as T;
   }
 
+  /**
+   * Empty response body is coerced to `undefined as T`. Only use `T = void`
+   * for endpoints known to return no body; a `Promise<SomeObject>` return
+   * on an empty body yields `undefined`, not a runtime error.
+   */
   async put<T>(
     path: string,
     body: unknown,
-    params?: Record<string, unknown>,
-    context?: ErrorContext
+    params: Record<string, unknown> | undefined,
+    context: ErrorContext
   ): Promise<T> {
     const url = this.buildUrl(path, params);
     const token = await this.getToken();
@@ -91,7 +108,7 @@ export class HttpClient {
     });
 
     if (!response.ok) {
-      await this.handleErrorResponse(response, context ?? { resource: 'unknown', operation: 'unknown' });
+      await this.handleErrorResponse(response, context);
     }
 
     const text = await response.text();
@@ -101,8 +118,8 @@ export class HttpClient {
 
   async delete(
     path: string,
-    params?: Record<string, unknown>,
-    context?: ErrorContext
+    params: Record<string, unknown> | undefined,
+    context: ErrorContext
   ): Promise<void> {
     const url = this.buildUrl(path, params);
     const token = await this.getToken();
@@ -116,7 +133,7 @@ export class HttpClient {
     });
 
     if (!response.ok) {
-      await this.handleErrorResponse(response, context ?? { resource: 'unknown', operation: 'unknown' });
+      await this.handleErrorResponse(response, context);
     }
   }
 
@@ -153,7 +170,8 @@ export class HttpClient {
     try {
       errorBody = JSON.parse(text);
     } catch {
-      throw new CcamError(text || `HTTP ${status}`, {
+      const ErrorClass = status === 401 ? CcamAuthError : CcamError;
+      throw new ErrorClass(text || `HTTP ${status}`, {
         status,
         resource: context.resource,
         operation: context.operation,

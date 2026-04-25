@@ -2,7 +2,11 @@ import type { HttpClient } from '../client.js';
 import type { Permission, ContentResponse, PaginationOptions } from '../types/index.js';
 
 export interface ListPermissionsOptions extends PaginationOptions {
-  /** Filter to admin permissions only */
+  /**
+   * Filter permissions by their `adminPermission` flag.
+   * Pass `true` to return only admin permissions; pass `false` to return
+   * only non-admin. Omit to return all.
+   */
   adminPermission?: boolean;
 }
 
@@ -40,7 +44,7 @@ export class PermissionsResource {
 
   /**
    * Get a specific permission by name.
-   * @param name - Permission name (e.g. "READ_USER", "WRITE_ORG")
+   * @param name - Permission name (e.g. "READ_USER", "WRITE_ORGANIZATION")
    * @returns Permission resource
    */
   async get(name: string): Promise<Permission> {

@@ -1,10 +1,12 @@
 import { Command } from 'commander';
-import { addGlobalOptions, resolveGlobalOptions, type GlobalOptions } from '../shared.js';
+import { addGlobalOptions, parseExpand, resolveGlobalOptions, writePageInfoIfTable, type GlobalOptions } from '../shared.js';
 import { resolveProfile } from '../auth/profile-resolver.js';
 import { createClientFromResolved } from '../client-factory.js';
 import { handleError } from '../error-handler.js';
 import { renderOutput, resolveFormat } from '../output/index.js';
 import { DEFAULT_COLUMNS } from '../output/default-columns.js';
+
+const CLIENT_GET_EXPAND = ['organizations', 'roles', 'organizations,roles'] as const;
 
 async function listClients(options: GlobalOptions): Promise<void> {
   try {
@@ -24,13 +26,7 @@ async function listClients(options: GlobalOptions): Promise<void> {
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result.content, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.client });
 
-    // Write pagination info to stderr for table format
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
+    writePageInfoIfTable(format, result);
   } catch (err) {
     handleError(err);
   }
@@ -49,9 +45,18 @@ async function getClient(id: string, options: ClientGetOptions): Promise<void> {
     });
     const client = await createClientFromResolved(profileResolved);
 
-    const result = options.expand
-      ? await (client.apiClients.get as (id: string, opts?: { expand?: string }) => Promise<unknown>)(id, { expand: options.expand })
-      : await client.apiClients.get(id);
+    const expand = parseExpand(options.expand, CLIENT_GET_EXPAND);
+    // Branch on the literal expand value so TypeScript can pick the right overload.
+    let result;
+    if (expand === 'organizations') {
+      result = await client.apiClients.get(id, { expand });
+    } else if (expand === 'roles') {
+      result = await client.apiClients.get(id, { expand });
+    } else if (expand === 'organizations,roles') {
+      result = await client.apiClients.get(id, { expand });
+    } else {
+      result = await client.apiClients.get(id);
+    }
 
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.clientDetail });
@@ -78,14 +83,6 @@ async function auditClient(id: string, options: ClientAuditOptions): Promise<voi
 
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result.content, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.auditLog });
-
-    // Write pagination info to stderr for table format
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
   } catch (err) {
     handleError(err);
   }

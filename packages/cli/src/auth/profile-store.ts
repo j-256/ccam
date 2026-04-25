@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
 import YAML from 'yaml';
 import { getProfilesPath, getCredentialsPath, getConfigDir } from './paths.js';
 
@@ -49,7 +50,7 @@ export class ProfileStore {
   }
 
   async saveProfile(name: string, input: SaveProfileInput): Promise<void> {
-    await fs.mkdir(getConfigDir(), { recursive: true });
+    await ensureConfigDir();
     const state = await this.read();
     state.profiles[name] = input.config;
     state.credentials[name] = input.credentials;
@@ -99,7 +100,7 @@ export class ProfileStore {
   }
 
   async updateCredentials(name: string, patch: Partial<ProfileCredentials>): Promise<void> {
-    await fs.mkdir(getConfigDir(), { recursive: true });
+    await ensureConfigDir();
     const credentialsText = await readIfExists(getCredentialsPath());
     const credentialsDoc: Record<string, ProfileCredentials> = credentialsText
       ? (YAML.parse(credentialsText) ?? {})
@@ -144,8 +145,19 @@ async function readIfExists(path: string): Promise<string | null> {
   }
 }
 
+async function ensureConfigDir(): Promise<void> {
+  const dir = getConfigDir();
+  await fs.mkdir(dir, { recursive: true, mode: 0o700 });
+  // mkdir with `recursive: true` will not re-chmod an existing directory, so
+  // enforce 0o700 explicitly to close the loophole where a pre-existing dir
+  // (e.g. created by hand or by an older ccam version) has looser perms.
+  if (process.platform !== 'win32') {
+    await fs.chmod(dir, 0o700);
+  }
+}
+
 async function atomicWrite(target: string, content: string, mode: number): Promise<void> {
-  const tmp = `${target}.tmp-${process.pid}-${Date.now()}`;
+  const tmp = `${target}.tmp-${randomBytes(4).toString('hex')}`;
   await fs.writeFile(tmp, content, { mode });
   await fs.rename(tmp, target);
 }

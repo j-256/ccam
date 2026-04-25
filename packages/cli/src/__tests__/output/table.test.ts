@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import chalk from 'chalk';
 import { formatTable } from '../../output/table.js';
 
 describe('formatTable', () => {
@@ -87,5 +88,38 @@ describe('formatTable', () => {
     const data = [{ active: false }];
     const result = formatTable(data);
     expect(result).toContain('false');
+  });
+
+  describe('with chalk colors forced on', () => {
+    let originalLevel: typeof chalk.level;
+
+    beforeAll(() => {
+      originalLevel = chalk.level;
+      chalk.level = 1;
+    });
+
+    afterAll(() => {
+      chalk.level = originalLevel;
+    });
+
+    it('wraps a short ENABLED status with a well-formed green escape pair', () => {
+      // Under the new order (truncate then colorize), a short "ENABLED" produces a
+      // clean '\x1b[32mENABLED\x1b[39m' pair -- the escape bytes are applied after any
+      // truncation runs so they cannot be bisected by a slice() call.
+      const data = [{ status: 'ENABLED' }];
+      const result = formatTable(data);
+      expect(result).toContain('\x1b[32mENABLED\x1b[39m');
+    });
+
+    it('does not apply status color when truncation changes the cell text', () => {
+      // A long value that starts with "ENABLED_" is truncated to a non-status string,
+      // so colorizeStatus should not match. This verifies the order: truncate first,
+      // then decide whether to colorize based on the truncated value.
+      const longValue = 'ENABLED_' + 'x'.repeat(100);
+      const data = [{ status: longValue }];
+      const result = formatTable(data);
+      expect(result).toContain('...');
+      expect(result).not.toContain('\x1b[32m');
+    });
   });
 });

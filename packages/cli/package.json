@@ -30,6 +30,23 @@
   "engines": {
     "node": ">=22"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/j-256/ccam.git"
+  },
+  "bugs": {
+    "url": "https://github.com/j-256/ccam/issues"
+  },
+  "homepage": "https://github.com/j-256/ccam#readme",
+  "keywords": [
+    "salesforce",
+    "commerce-cloud",
+    "sfcc",
+    "account-manager",
+    "am",
+    "demandware",
+    "cli"
+  ],
   "license": "MIT",
   "devDependencies": {
     "@types/react": "^19.2.14",

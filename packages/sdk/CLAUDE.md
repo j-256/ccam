@@ -22,7 +22,7 @@ src/
     index.ts       -- public auth exports
   
   resources/
-    users.ts                       -- UsersResource (list, get, search, audit)
+    users.ts                       -- UsersResource (list/get/getByLogin/current, search finders, audit, sub-resources, create/update/delete/reset/disable/revokeVerifier)
     organizations.ts               -- OrganizationsResource
     organization-configuration.ts  -- OrganizationConfigurationResource
     api-clients.ts                 -- ApiClientsResource

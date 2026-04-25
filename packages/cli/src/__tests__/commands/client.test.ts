@@ -126,6 +126,30 @@ describe('client commands', () => {
 
       expect(mockApiClients.get).toHaveBeenCalledWith('client-123', { expand: 'organizations,roles' });
     });
+
+    it('rejects invalid --expand value with a clear error', async () => {
+      const errorHandler = await import('../../error-handler.js');
+      const handleErrorMock = vi
+        .mocked(errorHandler.handleError)
+        .mockImplementation(() => {
+          throw new Error('exit');
+        });
+
+      const program = new Command();
+      registerClientCommands(program);
+
+      await expect(
+        program.parseAsync(['node', 'test', 'client', 'get', 'client-123', '--expand', 'bogus']),
+      ).rejects.toThrow();
+
+      expect(handleErrorMock).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringMatching(/Invalid --expand/) }),
+      );
+      expect(mockApiClients.get).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ expand: 'bogus' }),
+      );
+    });
   });
 
   describe('client audit', () => {

@@ -10,7 +10,6 @@ export const permissionsConfig: ResourceConfig = {
   // -- List view --
   columns: [
     { key: 'name', label: 'Name', width: 4, color: 'white' },
-    { key: 'description', label: 'Description', width: 5 },
     { key: 'adminPermission', label: 'Admin', width: 1, format: formatBoolean, priority: 5 },
   ],
 
@@ -27,7 +26,6 @@ export const permissionsConfig: ResourceConfig = {
   // -- Detail view --
   fields: [
     { key: 'name', label: 'Name' },
-    { key: 'description', label: 'Description' },
     { key: 'adminPermission', label: 'Admin Permission', format: formatBoolean },
   ],
 

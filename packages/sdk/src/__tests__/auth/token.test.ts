@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { TokenManager } from '../../auth/token.js';
-import { CcamRefreshFailedError } from '../../errors.js';
+import { CcamOAuthError, CcamRefreshFailedError } from '../../errors.js';
 
 describe('TokenManager', () => {
   const baseConfig = {
@@ -119,6 +119,25 @@ describe('TokenManager', () => {
 
     const manager = new TokenManager({ ...baseConfig, fetch: mockFetch });
     await expect(manager.getToken()).rejects.toThrow('Token acquisition failed');
+  });
+
+  it('throws CcamOAuthError on HTTP 200 with malformed body (acquireInitialToken)', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ error: 'invalid_grant' }),
+    });
+
+    const manager = new TokenManager({ ...baseConfig, fetch: mockFetch });
+    await expect(manager.getToken()).rejects.toThrow(CcamOAuthError);
+    // Cache must remain unset so a retry doesn't read NaN expiresAt.
+    const retryFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ access_token: 'recovered', expires_in: 1800 }),
+    });
+    const manager2 = new TokenManager({ ...baseConfig, fetch: retryFetch });
+    await expect(manager2.getToken()).resolves.toBe('recovered');
   });
 
   it('invalidate forces token re-fetch', async () => {
@@ -279,6 +298,22 @@ describe('TokenManager with refresh token', () => {
     const token = await tm.getToken();
     expect(token).toBe('still-fresh');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('throws CcamOAuthError on HTTP 200 with malformed body (refreshAccessToken)', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ error: 'invalid_grant' }),
+    });
+    const tm = new TokenManager({
+      clientId: 'cid',
+      clientSecret: 'sec',
+      host: 'https://am.example',
+      fetch: fetchMock as unknown as typeof fetch,
+      initialCache: { accessToken: 'old', refreshToken: 'r1', expiresAt: 0 },
+    });
+    await expect(tm.getToken()).rejects.toThrow(CcamOAuthError);
   });
 });
 

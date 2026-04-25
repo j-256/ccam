@@ -9,7 +9,7 @@ import { InfoTab } from '../components/InfoTab.js';
 import { SubResourceTab } from '../components/SubResourceTab.js';
 import { AuditTab } from '../components/AuditTab.js';
 import { FooterBar } from '../components/FooterBar.js';
-import type { ResourceConfig, TabConfig } from '../types.js';
+import type { AuditTabConfig, ResourceConfig, TabConfig } from '../types.js';
 import type { AuditLogRecord, ContentResponse } from '@ccam/sdk';
 
 export interface ResourceDetailViewProps {
@@ -153,8 +153,11 @@ export function ResourceDetailView({ config, id }: ResourceDetailViewProps) {
   );
 }
 
-// Wrapper to adapt TabConfig.fetchFn to AuditTab's expected fetchFn signature
-function AuditTabWrapper({ tab, id }: { tab: TabConfig; id: string }) {
+// Wrapper to adapt TabConfig.fetchFn to AuditTab's expected fetchFn signature.
+// The element-type cast (Record<string, unknown> -> AuditLogRecord) is needed
+// because the tab-level fetchFn is typed against the generic record shape that
+// all tab tables use.
+function AuditTabWrapper({ tab, id }: { tab: AuditTabConfig; id: string }) {
   const client = useClient();
   const fetchFn = useCallback(
     (querySize?: number) =>

@@ -345,6 +345,34 @@ describe('OrganizationsResource', () => {
       );
       expect(result).toBe(mockResponse);
     });
+
+    it('should throw when querySize is 0', async () => {
+      await expect(organizations.auditLogs('org-123', { querySize: 0 })).rejects.toThrow(
+        /querySize must be a positive integer/
+      );
+      expect(httpClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw when querySize is negative', async () => {
+      await expect(organizations.auditLogs('org-123', { querySize: -1 })).rejects.toThrow(
+        /querySize must be a positive integer/
+      );
+      expect(httpClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw when querySize is non-integer', async () => {
+      await expect(organizations.auditLogs('org-123', { querySize: 1.5 })).rejects.toThrow(
+        /querySize must be a positive integer/
+      );
+      expect(httpClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw when querySize exceeds 1000', async () => {
+      await expect(organizations.auditLogs('org-123', { querySize: 10000 })).rejects.toThrow(
+        /querySize must be <= 1000/
+      );
+      expect(httpClient.get).not.toHaveBeenCalled();
+    });
   });
 
   describe('update', () => {

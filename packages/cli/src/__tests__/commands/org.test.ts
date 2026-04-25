@@ -247,6 +247,30 @@ describe('org commands', () => {
 
       expect(mockOrganizations.realms).toHaveBeenCalledWith('org-123', { expand: 'instance' });
     });
+
+    it('rejects invalid --expand value with a clear error', async () => {
+      const errorHandler = await import('../../error-handler.js');
+      const handleErrorMock = vi
+        .mocked(errorHandler.handleError)
+        .mockImplementation(() => {
+          throw new Error('exit');
+        });
+
+      const program = new Command();
+      registerOrgCommands(program);
+
+      await expect(
+        program.parseAsync(['node', 'test', 'org', 'realms', 'org-123', '--expand', 'bogus']),
+      ).rejects.toThrow();
+
+      expect(handleErrorMock).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringMatching(/Invalid --expand/) }),
+      );
+      expect(mockOrganizations.realms).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ expand: 'bogus' }),
+      );
+    });
   });
 
   describe('org instances', () => {

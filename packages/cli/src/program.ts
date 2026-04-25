@@ -15,12 +15,10 @@ export const program = new Command()
   .description('CLI for the Salesforce Commerce Cloud Account Manager API')
   .version('0.1.0')
   .option('-i, --interactive', 'Launch interactive TUI')
-  .option('--host <host>', 'API host URL')
-  .option('--profile <profile>', 'Auth profile name')
   .action(async (options) => {
     if (options.interactive || process.stdout.isTTY) {
       const { startTui } = await import('./tui/index.js');
-      await startTui({ host: options.host, profile: options.profile });
+      await startTui();
     } else {
       program.help();
     }

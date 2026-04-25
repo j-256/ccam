@@ -20,8 +20,8 @@ export interface AuditLogRecord {
   /** Human-readable message describing the event */
   eventMessage: string;
 
-  /** Support ticket ID associated with the event (empty string if none) */
-  supportTicketId: string;
+  /** Support ticket ID associated with the event. Null when no ticket is associated. */
+  supportTicketId: string | null;
 
   /** ISO-8601 timestamp when the event occurred */
   timestamp: string;

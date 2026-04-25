@@ -69,7 +69,7 @@ export const apiClientFields: FieldSpec = {
   tokenEndpointAuthMethod: 'string',
   passwordModificationTimestamp: 'number|null',
   lastAuthenticatedDate: 'string|null',
-  disabledTimestamp: 'number|null',
+  disabledTimestamp: 'string|null',
   createdAt: 'string',
   publicClient: 'boolean',
   needsInitialPassword: 'boolean',

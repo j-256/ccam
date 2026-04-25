@@ -3,6 +3,7 @@ import type { Instance, PagedResponse, ContentResponse, PaginationOptions, SortO
 import { formatSort } from './sort.js';
 
 export interface ListInstancesOptions extends PaginationOptions {
+  /** Per AM docs, instances have no documented sortable fields. Passing `sort` will be sent to the server and likely rejected. */
   sort?: SortOption<string>;
 }
 

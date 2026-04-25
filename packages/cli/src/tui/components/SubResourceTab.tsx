@@ -8,16 +8,16 @@ import { usePaginatedResource } from '../hooks/use-paginated-resource.js';
 import { useScrollWindow } from '../hooks/use-scroll-window.js';
 import { useTerminalSize } from '../context/terminal-size.js';
 import { Table } from './Table.js';
-import { getSortableColumns, type TabConfig } from '../types.js';
+import { getSortableColumns, type LocalTabConfig, type PaginatedTabConfig } from '../types.js';
 
 const BORDER_INSET = 2;
 
 export interface SubResourceTabProps {
-  tab: TabConfig;
+  tab: LocalTabConfig | PaginatedTabConfig;
   parentId: string;
 }
 
-function LocalSubResource({ tab, parentId }: SubResourceTabProps) {
+function LocalSubResource({ tab, parentId }: { tab: LocalTabConfig; parentId: string }) {
   const client = useClient();
   const nav = useNav();
   const { cols } = useTerminalSize();
@@ -151,7 +151,7 @@ function LocalSubResource({ tab, parentId }: SubResourceTabProps) {
   );
 }
 
-function PaginatedSubResource({ tab, parentId }: SubResourceTabProps) {
+function PaginatedSubResource({ tab, parentId }: { tab: PaginatedTabConfig; parentId: string }) {
   const client = useClient();
   const nav = useNav();
   const { cols } = useTerminalSize();

@@ -12,11 +12,18 @@ import type {
   AuditLogOptions,
   UpdateOrganizationRequest,
   SfMyDomainVerificationResponse,
+  OrganizationSortField,
 } from '../types/index.js';
 import { formatSort } from './sort.js';
+import { validateQuerySize } from './validation.js';
 
 export interface ListOrganizationsOptions extends PaginationOptions {
-  sort?: SortOption<string>;
+  /**
+   * Sort field. Prefer values from {@link OrganizationSortField} for IDE
+   * autocomplete and to avoid server-side 400 on non-sortable fields. Accepts
+   * any string to tolerate server-side additions.
+   */
+  sort?: SortOption<OrganizationSortField | string>;
 }
 
 export interface FindByNameOptions extends PaginationOptions {
@@ -185,6 +192,7 @@ export class OrganizationsResource {
    * @returns List of audit log records (not paginated)
    */
   async auditLogs(orgId: string, opts?: AuditLogOptions): Promise<ContentResponse<AuditLogRecord>> {
+    validateQuerySize(opts?.querySize);
     const params: Record<string, unknown> | undefined = opts?.querySize !== undefined ? { querySize: opts.querySize } : undefined;
 
     return this.http.get<ContentResponse<AuditLogRecord>>(

@@ -11,7 +11,11 @@ export interface Verifier {
   /** Unique identifier for the verifier device */
   id: string;
 
-  /** Type of verifier (sfa, totp, webauthn.cross-platform) */
+  /**
+   * Type of verifier (sfa, totp, webauthn.cross-platform).
+   * Union with `string` is intentional: the server may add types; prefer
+   * comparing against {@link VerifierType} values but tolerate unknown strings.
+   */
   type: VerifierType | string;
 
   /** User-friendly display name for the device */
@@ -79,7 +83,11 @@ interface UserBase {
   /** Date string of last login (e.g. "2026-04-07") */
   lastLoginDate: string | null;
 
-  /** Current state of the user account (ENABLED, DELETED) */
+  /**
+   * Current state of the user account (ENABLED, DELETED, INITIAL).
+   * Union with `string` is intentional: the server may add states; prefer
+   * comparing against {@link UserState} values but tolerate unknown strings.
+   */
   userState: UserState | string;
 
   /** Unix timestamp (milliseconds) when activation code was created */

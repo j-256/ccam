@@ -6,7 +6,12 @@ import type { OrganizationType, SfIdentityFederation } from './enums.js';
  * Organizations group users, realms, and API clients under a single administrative entity.
  */
 export interface Organization {
-  /** Unique identifier for the organization (UUID) */
+  /**
+   * Unique identifier for the organization. Usually a UUID, but some
+   * organizations (notably older ones) have a display-name-like string
+   * instead. Treat as an opaque identifier -- do not parse or assume
+   * a format.
+   */
   id: string;
 
   /** Display name of the organization */
@@ -33,7 +38,12 @@ export interface Organization {
   /** Salesforce Account IDs linked to this organization */
   sfAccountIds: string[];
 
-  /** Organization type (e.g. STANDARD, TRIAL) */
+  /**
+   * Organization type. See {@link OrganizationType} for the complete enum
+   * (CUSTOMER, INTERNAL, etc.). Union with `string` is intentional: the server
+   * may add types; prefer comparing against enum values but tolerate unknown
+   * strings.
+   */
   type: OrganizationType | string;
 
   /** Role IDs that require two-factor authentication */

@@ -35,7 +35,7 @@ describe('ApiClientsResource', () => {
   });
 
   describe('list', () => {
-    it('should call GET /dw/rest/v1/apiclients/', async () => {
+    it('should call GET /dw/rest/v1/apiclients', async () => {
       const mockResponse: PagedResponse<ApiClient> = {
         content: [],
         page: { number: 0, size: 25, totalElements: 0, totalPages: 0 },
@@ -47,7 +47,7 @@ describe('ApiClientsResource', () => {
       const result = await apiClients.list();
 
       expect(httpClient.get).toHaveBeenCalledWith(
-        '/dw/rest/v1/apiclients/',
+        '/dw/rest/v1/apiclients',
         undefined,
         { resource: 'apiClients', operation: 'list' }
       );
@@ -66,7 +66,7 @@ describe('ApiClientsResource', () => {
       const result = await apiClients.list({ page: 1, size: 10 });
 
       expect(httpClient.get).toHaveBeenCalledWith(
-        '/dw/rest/v1/apiclients/',
+        '/dw/rest/v1/apiclients',
         { page: 1, size: 10 },
         { resource: 'apiClients', operation: 'list' }
       );
@@ -148,6 +148,34 @@ describe('ApiClientsResource', () => {
         { resource: 'apiClients', operation: 'auditLogs' }
       );
       expect(result).toBe(mockResponse);
+    });
+
+    it('should throw when querySize is 0', async () => {
+      await expect(apiClients.auditLogs('client-123', { querySize: 0 })).rejects.toThrow(
+        /querySize must be a positive integer/
+      );
+      expect(httpClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw when querySize is negative', async () => {
+      await expect(apiClients.auditLogs('client-123', { querySize: -1 })).rejects.toThrow(
+        /querySize must be a positive integer/
+      );
+      expect(httpClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw when querySize is non-integer', async () => {
+      await expect(apiClients.auditLogs('client-123', { querySize: 1.5 })).rejects.toThrow(
+        /querySize must be a positive integer/
+      );
+      expect(httpClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw when querySize exceeds 1000', async () => {
+      await expect(apiClients.auditLogs('client-123', { querySize: 10000 })).rejects.toThrow(
+        /querySize must be <= 1000/
+      );
+      expect(httpClient.get).not.toHaveBeenCalled();
     });
   });
 

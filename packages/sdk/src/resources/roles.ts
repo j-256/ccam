@@ -1,15 +1,25 @@
 import type { HttpClient } from '../client.js';
-import type { Role, RoleExpanded, PagedResponse, PaginationOptions, SortOption } from '../types/index.js';
+import type { Role, RoleExpanded, PagedResponse, PaginationOptions, SortOption, RoleSortField } from '../types/index.js';
 import { formatSort } from './sort.js';
 
 export interface ListRolesOptions extends PaginationOptions {
-  sort?: SortOption<string>;
+  /**
+   * Sort field. Prefer values from {@link RoleSortField} for IDE autocomplete
+   * and to avoid server-side 400 on non-sortable fields. Accepts any string
+   * to tolerate server-side additions.
+   */
+  sort?: SortOption<RoleSortField | string>;
 }
 
 export interface ListRolesExpandedOptions extends PaginationOptions {
   expand: 'serviceType';
   roleTargetType?: string;
-  sort?: SortOption<string>;
+  /**
+   * Sort field. Prefer values from {@link RoleSortField} for IDE autocomplete
+   * and to avoid server-side 400 on non-sortable fields. Accepts any string
+   * to tolerate server-side additions.
+   */
+  sort?: SortOption<RoleSortField | string>;
 }
 
 /**
@@ -63,14 +73,14 @@ export class RolesResource {
 
   /**
    * Get a specific role by ID.
-   * @param id - Role ID (e.g. "ADMIN", "ECOM_USER")
+   * @param id - Role ID (e.g. "account-admin", "user-admin")
    * @returns Role resource
    */
   async get(id: string): Promise<Role>;
 
   /**
    * Get a specific role by ID with serviceType expanded to a full object.
-   * @param id - Role ID (e.g. "ADMIN", "ECOM_USER")
+   * @param id - Role ID (e.g. "account-admin", "user-admin")
    * @param opts - Expand options
    * @returns Role with expanded serviceType
    */

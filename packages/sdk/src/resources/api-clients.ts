@@ -15,14 +15,21 @@ import type {
   CreateApiClientRequest,
   UpdateApiClientRequest,
   SetPasswordRequest,
+  ApiClientSortField,
 } from '../types/index.js';
 import { formatSort } from './sort.js';
+import { validateQuerySize } from './validation.js';
 
 /** Expand options for API client get endpoint */
 export type ExpandApiClients = 'organizations' | 'roles' | 'organizations,roles';
 
 export interface ListApiClientsOptions extends PaginationOptions {
-  sort?: SortOption<string>;
+  /**
+   * Sort field. Prefer values from {@link ApiClientSortField} for IDE
+   * autocomplete and to avoid server-side 400 on non-sortable fields. Accepts
+   * any string to tolerate server-side additions.
+   */
+  sort?: SortOption<ApiClientSortField | string>;
 }
 
 export interface GetApiClientOptions {
@@ -56,7 +63,7 @@ export class ApiClientsResource {
     }
 
     return this.http.get<PagedResponse<ApiClient>>(
-      '/dw/rest/v1/apiclients/',
+      '/dw/rest/v1/apiclients',
       Object.keys(params).length > 0 ? params : undefined,
       { resource: 'apiClients', operation: 'list' }
     );
@@ -110,6 +117,7 @@ export class ApiClientsResource {
    * @returns List of audit log records (not paginated)
    */
   async auditLogs(id: string, opts?: AuditLogOptions): Promise<ContentResponse<AuditLogRecord>> {
+    validateQuerySize(opts?.querySize);
     const params: Record<string, unknown> | undefined = opts?.querySize !== undefined ? { querySize: opts.querySize } : undefined;
 
     return this.http.get<ContentResponse<AuditLogRecord>>(

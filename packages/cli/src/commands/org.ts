@@ -1,11 +1,13 @@
 import { Command } from 'commander';
 import { CcamNotFoundError } from '@ccam/sdk';
-import { addGlobalOptions, resolveGlobalOptions, type GlobalOptions } from '../shared.js';
+import { addGlobalOptions, parseExpand, resolveGlobalOptions, writePageInfoIfTable, type GlobalOptions } from '../shared.js';
 import { resolveProfile } from '../auth/profile-resolver.js';
 import { createClientFromResolved } from '../client-factory.js';
 import { handleError } from '../error-handler.js';
 import { renderOutput, resolveFormat } from '../output/index.js';
 import { DEFAULT_COLUMNS } from '../output/default-columns.js';
+
+const ORG_REALMS_EXPAND = ['instance'] as const;
 
 interface OrgFilters {
   name?: string;
@@ -108,13 +110,7 @@ async function listOrgs(options: OrgListOptions): Promise<void> {
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result.content, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.org });
 
-    // Write pagination info to stderr for table format
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
+    writePageInfoIfTable(format, result);
   } catch (err) {
     handleError(err);
   }
@@ -149,9 +145,8 @@ async function getOrgRealms(idOrName: string, options: OrgRealmsOptions): Promis
     const client = await createClientFromResolved(profileResolved);
 
     const orgId = await resolveOrgId(client, idOrName);
-    const result = options.expand === 'instance'
-      ? await client.organizations.realms(orgId, { expand: 'instance' })
-      : await client.organizations.realms(orgId);
+    const expand = parseExpand(options.expand, ORG_REALMS_EXPAND);
+    const result = expand ? await client.organizations.realms(orgId, { expand }) : await client.organizations.realms(orgId);
 
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result.content, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.realm });
@@ -198,14 +193,6 @@ async function auditOrg(idOrName: string, options: OrgAuditOptions): Promise<voi
 
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result.content, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.auditLog });
-
-    // Write pagination info to stderr for table format
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
   } catch (err) {
     handleError(err);
   }

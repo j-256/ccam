@@ -1,10 +1,12 @@
 import { Command } from 'commander';
-import { addGlobalOptions, resolveGlobalOptions, type GlobalOptions } from '../shared.js';
+import { addGlobalOptions, parseExpand, resolveGlobalOptions, writePageInfoIfTable, type GlobalOptions } from '../shared.js';
 import { resolveProfile } from '../auth/profile-resolver.js';
 import { createClientFromResolved } from '../client-factory.js';
 import { handleError } from '../error-handler.js';
 import { renderOutput, resolveFormat } from '../output/index.js';
 import { DEFAULT_COLUMNS } from '../output/default-columns.js';
+
+const ROLE_EXPAND = ['serviceType'] as const;
 
 interface RoleListOptions extends GlobalOptions {
   expand?: string;
@@ -30,11 +32,12 @@ async function listRoles(options: RoleListOptions): Promise<void> {
       sort: resolved.sort,
     };
 
+    const expand = parseExpand(options.expand, ROLE_EXPAND);
     let result;
-    if (options.expand === 'serviceType') {
+    if (expand === 'serviceType') {
       result = await client.roles.list({
         ...baseOpts,
-        expand: 'serviceType' as const,
+        expand,
         ...(options.targetType !== undefined ? { roleTargetType: options.targetType } : {}),
       });
     } else {
@@ -44,12 +47,7 @@ async function listRoles(options: RoleListOptions): Promise<void> {
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result.content, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.role });
 
-    if (format === 'table' && result && typeof result === 'object' && 'page' in result) {
-      const page = result as { page: { number: number; size: number; totalElements: number; totalPages: number } };
-      process.stderr.write(
-        `Page ${page.page.number + 1} of ${page.page.totalPages} (${page.page.totalElements} total)\n`
-      );
-    }
+    writePageInfoIfTable(format, result);
   } catch (err) {
     handleError(err);
   }
@@ -64,9 +62,8 @@ async function getRole(id: string, options: RoleGetOptions): Promise<void> {
     });
     const client = await createClientFromResolved(profileResolved);
 
-    const result = options.expand === 'serviceType'
-      ? await client.roles.get(id, { expand: 'serviceType' })
-      : await client.roles.get(id);
+    const expand = parseExpand(options.expand, ROLE_EXPAND);
+    const result = expand ? await client.roles.get(id, { expand }) : await client.roles.get(id);
 
     const format = resolveFormat(resolved.format, process.stdout.isTTY);
     renderOutput(result, { format, fields: resolved.fields, defaultFields: DEFAULT_COLUMNS.roleDetail });

@@ -5,7 +5,12 @@ import { ResourceDetailView } from '../../../tui/views/ResourceDetailView.js';
 import { ClientProvider } from '../../../tui/context/client.js';
 import { NavigationProvider, useNav } from '../../../tui/context/navigation.js';
 import { TerminalSizeProvider } from '../../../tui/context/terminal-size.js';
-import type { ResourceConfig, ViewEntry, TabConfig } from '../../../tui/types.js';
+import type {
+  AuditTabConfig,
+  LocalTabConfig,
+  ResourceConfig,
+  ViewEntry,
+} from '../../../tui/types.js';
 import { createMockClient, delay } from '../helpers.js';
 
 const home: ViewEntry = { view: 'resource-picker', label: 'Home' };
@@ -54,7 +59,7 @@ function makeConfig(overrides?: Partial<ResourceConfig>): ResourceConfig {
   };
 }
 
-function makeSubResourceTab(overrides?: Partial<TabConfig>): TabConfig {
+function makeSubResourceTab(overrides?: Partial<LocalTabConfig>): LocalTabConfig {
   return {
     key: 'roles',
     label: 'Roles',
@@ -75,7 +80,7 @@ function makeSubResourceTab(overrides?: Partial<TabConfig>): TabConfig {
   };
 }
 
-function makeAuditTab(overrides?: Partial<TabConfig>): TabConfig {
+function makeAuditTab(overrides?: Partial<AuditTabConfig>): AuditTabConfig {
   return {
     key: 'audit',
     label: 'Audit',

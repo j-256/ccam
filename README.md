@@ -12,6 +12,23 @@ The AM API is largely undocumented. **ccam** serves as both a practical tool and
 npm install -g ccam
 ```
 
+### First run
+
+After installing, log in interactively (opens a browser):
+
+```bash
+ccam auth login
+```
+
+Follow the prompts. This creates a named profile at `~/.config/ccam/profiles.yaml`
+(non-secret) and `~/.config/ccam/credentials` (0600; contains refresh token).
+
+Non-interactive alternatives:
+
+- `ccam auth login --client` -- prompts for client ID and secret for client_credentials flow
+- `ccam auth login --password` -- prompts for user email/password for ROPC flow
+- Set environment variables instead -- see below
+
 ### Authentication
 
 Set environment variables for your API client credentials:
@@ -145,12 +162,13 @@ Most resources support:
 - `list` -- paginated list of resources
 - `get <id>` -- get a single resource by ID
 
-Some resources have additional commands:
-- Users: `get` by login (default) or by ID (`--id`), `current` for authenticated user, `audit` for audit logs, filter flags on `list` (see below)
-- Organizations: `realms`, `audit`, filter flags on `list` (`--name`, `--starts-with`, `--sf-account-id`)
-- API Clients: `audit` for audit logs
+Additional commands:
+- Users: `get` by login (default) or by ID (`--id`), `current`, `audit`, `roles`, `instances`, `assigned-realms`, `assigned-instances`, `create`, `update`, `delete`, `reset`, `disable`, `revoke-verifier`. Filter flags on `list` (see below).
+- Organizations: `realms`, `instances`, `audit`, `update`. Filter flags on `list` (`--name`, `--starts-with`, `--sf-account-id`).
+- API Clients: `audit`, `assigned-realms`, `assigned-instances`, `create`, `update`, `delete`, `set-password`, `set-auth-type`.
+- Instances: `validate-filter`.
 
-Users and API Clients support `--expand` on `get` to include related resources (`organizations`, `roles`, or `organizations,roles`).
+Users and API Clients support `--expand` on `get` to include related resources (`organizations`, `roles`, or `organizations,roles`). Roles and Org Realms support `--expand serviceType` / `--expand instance` respectively.
 
 ## User Search Filters
 

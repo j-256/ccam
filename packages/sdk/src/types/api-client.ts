@@ -48,7 +48,12 @@ export interface ApiClient {
   /** See {@link RoleTenantFilterMap}. */
   roleTenantFilterMap: RoleTenantFilterMap;
 
-  /** Token endpoint authentication method (e.g. "client_secret_basic", "private_key_jwt") */
+  /**
+   * Token endpoint authentication method (e.g. "client_secret_basic", "private_key_jwt").
+   * Union with `string` is intentional: the server may add methods; prefer
+   * comparing against {@link TokenEndpointAuthMethod} values but tolerate
+   * unknown strings.
+   */
   tokenEndpointAuthMethod: TokenEndpointAuthMethod | string;
 
   /** Unix timestamp (milliseconds) when password/secret was last modified */
