@@ -26,19 +26,21 @@ npm install -g ccam
 
 ### First run
 
-After installing, log in interactively (opens a browser):
+ccam talks to Account Manager over OAuth2, so you need an AM API client before you can log in. If you already use sfcc-ci or other Commerce Cloud tooling, you can reuse that client; otherwise see [`docs/getting-started.md`](docs/getting-started.md) for a step-by-step walkthrough of creating one.
+
+Once you have a client ID (and secret, for confidential clients):
 
 ```bash
-ccam auth login
+ccam auth login --client-id <your-client-id>
 ```
 
-Follow the prompts. This creates a named profile at `~/.config/ccam/profiles.yaml`
-(non-secret) and `~/.config/ccam/credentials` (0600; contains refresh token).
+This opens a browser to AM, captures the authorization code on a loopback server, and saves a profile to `~/.config/ccam/profiles.yaml` (non-secret) and `~/.config/ccam/credentials` (0600; contains refresh token).
 
 Non-interactive alternatives:
 
-- `ccam auth login --client` -- prompts for client ID and secret for client_credentials flow
-- `ccam auth login --password` -- prompts for user email/password for ROPC flow
+- `ccam auth login --client` -- client_credentials flow (for CI/automation)
+- `ccam auth login --password` -- ROPC flow (when SSO/MFA are not enforced)
+- `ccam auth login --manual` -- browser flow without a loopback server (for SSH/headless)
 - Set environment variables instead -- see below
 
 ### Authentication
