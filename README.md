@@ -4,6 +4,18 @@ TypeScript CLI and SDK for the Salesforce Commerce Cloud Account Manager REST AP
 
 The AM API is largely undocumented. **ccam** serves as both a practical tool and a reference implementation for developers working with Commerce Cloud account management.
 
+## Why ccam?
+
+ccam is built for people who administer Account Manager: security and compliance teams running access audits, team leads onboarding and offboarding users, and developers integrating AM into their own tooling.
+
+- **Complete AM coverage.** Users, organizations, API clients, roles, realms, permissions, service types, org configurations, instances -- every resource, every subresource, every finder.
+- **Exportable.** CSV, TSV, YAML, JSON, or table. `ccam user list --org <id> --format csv` produces a spreadsheet-ready roster.
+- **Typed SDK.** `@ccam/sdk` is a first-class, documented TypeScript library with TSDoc on every method, typed sort enums, and a structured error taxonomy.
+- **Named auth profiles.** Switch between orgs or accounts without re-authenticating. Refresh tokens are stored at `~/.config/ccam/credentials` with 0600 permissions.
+- **Interactive TUI.** Run `ccam` with no arguments for a keyboard-driven resource browser with drill-down from user to orgs to realms.
+
+[sfcc-ci](https://github.com/SalesforceCommerceCloud/sfcc-ci) is the de facto Commerce Cloud CLI for code deploys, sandbox management, job execution, and SLAS admin. Its AM commands exist to support CI/CD. ccam fills the gap for administration, auditing, and SDK consumers -- see [docs/vs-sfcc-ci.md](docs/vs-sfcc-ci.md) for a detailed comparison.
+
 ## Quick Start: CLI
 
 ### Installation
