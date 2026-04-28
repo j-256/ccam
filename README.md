@@ -14,7 +14,12 @@ ccam is built for people who administer Account Manager: security and compliance
 - **Named auth profiles.** Switch between orgs or accounts without re-authenticating. Refresh tokens are stored at `~/.config/ccam/credentials` with 0600 permissions.
 - **Interactive TUI.** Run `ccam` with no arguments for a keyboard-driven resource browser with drill-down from user to orgs to realms.
 
-[sfcc-ci](https://github.com/SalesforceCommerceCloud/sfcc-ci) is the de facto Commerce Cloud CLI for code deploys, sandbox management, job execution, and SLAS admin. Its AM commands exist to support CI/CD. ccam fills the gap for administration, auditing, and SDK consumers -- see [docs/vs-sfcc-ci.md](docs/vs-sfcc-ci.md) for a detailed comparison.
+Comparisons with the other Commerce Cloud CLIs:
+
+- [b2c-cli](https://github.com/SalesforceCommerceCloud/b2c-developer-tooling) is Salesforce's official CLI (GA, supersedes sfcc-ci). Broad Commerce Cloud coverage (OCAPI, sandboxes, SLAS, MRT), basic AM commands. See [docs/vs-b2c-cli.md](docs/vs-b2c-cli.md).
+- [sfcc-ci](https://github.com/SalesforceCommerceCloud/sfcc-ci) is the long-standing community CLI for CI/CD. Minimal AM coverage. See [docs/vs-sfcc-ci.md](docs/vs-sfcc-ci.md).
+
+ccam fills the AM-administration gap both leave open.
 
 ## Quick Start: CLI
 
