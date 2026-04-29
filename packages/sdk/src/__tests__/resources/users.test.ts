@@ -1010,4 +1010,85 @@ describe('UsersResource', () => {
       expect(result).toEqual({ user: after, changed: true, roleScope: 'INSTANCE' });
     });
   });
+
+  describe('revokeRole', () => {
+    const baseUser = (overrides: Partial<User> = {}): User => ({
+      id: 'user-123',
+      mail: 'alice@example.com',
+      firstName: 'Alice',
+      lastName: 'Example',
+      displayName: 'Alice Example',
+      businessPhone: null,
+      homePhone: null,
+      mobilePhone: null,
+      preferredLocale: null,
+      roles: [],
+      primaryOrganization: 'org-1',
+      organizations: ['org-1'],
+      roleTenantFilter: '',
+      roleTenantFilterMap: {},
+      passwordExpirationTimestamp: null,
+      passwordModificationTimestamp: null,
+      createdAt: '2026-01-01T00:00:00Z',
+      lastModified: '2026-01-01T00:00:00Z',
+      lastLoginDate: null,
+      userState: 'ENABLED',
+      activationCodeCreationTimestamp: null,
+      sfUserId: null,
+      verifiers: [],
+      deleteTimestamp: null,
+      links: [],
+      ...overrides,
+    });
+
+    it('is a no-op when the role is not present', async () => {
+      const before = baseUser({ roles: ['api-admin'] });
+      vi.mocked(httpClient.get).mockResolvedValueOnce(before);
+
+      const result = await users.revokeRole('user-123', 'account-admin');
+
+      expect(httpClient.put).not.toHaveBeenCalled();
+      expect(result).toEqual({ user: before, changed: false });
+    });
+
+    it('removes the role via PUT with filtered roles, never sends filter', async () => {
+      const before = baseUser({
+        roles: ['ccdx-sbx-user', 'api-admin'],
+        roleTenantFilter: 'CCDX_SBX_USER:zysj_sbx',
+      });
+      const after = baseUser({
+        roles: ['api-admin'],
+        roleTenantFilter: '',
+      });
+      vi.mocked(httpClient.get).mockResolvedValueOnce(before);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      const result = await users.revokeRole('user-123', 'ccdx-sbx-user');
+
+      expect(httpClient.put).toHaveBeenCalledWith(
+        '/dw/rest/v1/users/user-123',
+        { roles: ['api-admin'] },
+        undefined,
+        { resource: 'users', operation: 'revokeRole' }
+      );
+      expect(result).toEqual({ user: after, changed: true });
+    });
+
+    it('does not fetch /roles/{id}', async () => {
+      const before = baseUser({ roles: ['api-admin'] });
+      const after = baseUser({ roles: [] });
+      vi.mocked(httpClient.get).mockResolvedValueOnce(before);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      await users.revokeRole('user-123', 'api-admin');
+
+      // Only one GET call: /users/{id}. No /roles/{id} lookup.
+      expect(vi.mocked(httpClient.get)).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(httpClient.get)).toHaveBeenCalledWith(
+        '/dw/rest/v1/users/user-123',
+        undefined,
+        { resource: 'users', operation: 'get' }
+      );
+    });
+  });
 });

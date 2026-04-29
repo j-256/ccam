@@ -550,4 +550,31 @@ export class UsersResource {
     );
     return { user: updated, changed: true, roleScope: role.scope };
   }
+
+  /**
+   * Revoke a role from a user. Idempotent: returns `{ changed: false }` and
+   * skips the PUT if the role is not present.
+   *
+   * Implementation sends only `{ roles: filtered }` -- AM automatically strips
+   * any `roleTenantFilter` entry for the removed role server-side. (Confirmed
+   * via staging probe 2026-04-28.) The SDK does not touch the filter.
+   *
+   * Not transactional: see {@link grantRole} for the race-window caveat.
+   */
+  async revokeRole(id: string, roleId: string): Promise<RevokeRoleResult> {
+    const user = await this.get(id);
+
+    if (!user.roles.includes(roleId)) {
+      return { user, changed: false };
+    }
+
+    const nextRoles = user.roles.filter((r) => r !== roleId);
+    const updated = await this.http.put<User>(
+      `/dw/rest/v1/users/${id}`,
+      { roles: nextRoles },
+      undefined,
+      { resource: 'users', operation: 'revokeRole' },
+    );
+    return { user: updated, changed: true };
+  }
 }
