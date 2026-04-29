@@ -216,3 +216,45 @@ export interface DisableUserRequest {
   /** Optional support ticket ID */
   supportTicketId?: string;
 }
+
+/**
+ * Options for {@link UsersResource.grantRole} / {@link ApiClientsResource.grantRole}.
+ *
+ * Shared between User and ApiClient forms of grant. Only `tenants` is
+ * currently supported; kept as an object for future expansion.
+ */
+export interface GrantRoleOptions {
+  /**
+   * Tenant tokens to grant for a tenant-scoped role. Merged (union) into the
+   * existing `roleTenantFilter` entry for this role. Required for non-GLOBAL
+   * roles to be functional; rejected for GLOBAL-scope roles.
+   */
+  tenants?: string[];
+}
+
+/**
+ * Result of {@link UsersResource.grantRole}.
+ *
+ * `user` reflects current server state: the pre-op GET response when no write
+ * occurred, or the PUT response otherwise. `changed` is true iff a PUT was
+ * issued. `roleScope` is the scope of the granted role (e.g. `"GLOBAL"`,
+ * `"INSTANCE"`), from the role lookup the SDK performed -- surfaced so CLI
+ * callers can warn when a non-GLOBAL role is granted without tenants.
+ */
+export interface GrantRoleResult {
+  user: User;
+  changed: boolean;
+  roleScope: string;
+}
+
+/**
+ * Result of {@link UsersResource.revokeRole}.
+ *
+ * `user` reflects current server state: the pre-op GET response when no write
+ * occurred, or the PUT response otherwise. `changed` is true iff a PUT was
+ * issued.
+ */
+export interface RevokeRoleResult {
+  user: User;
+  changed: boolean;
+}

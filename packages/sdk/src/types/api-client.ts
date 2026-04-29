@@ -182,3 +182,30 @@ export interface SetAuthTypeRequest {
   /** true for public client, false for confidential */
   public: boolean;
 }
+
+/**
+ * Result of {@link ApiClientsResource.grantRole}.
+ *
+ * `apiClient` reflects current server state: the pre-op GET when no write
+ * occurred, or the PUT response otherwise. `changed` is true iff a PUT was
+ * issued. `roleScope` is the granted role's scope (e.g. `"GLOBAL"`,
+ * `"INSTANCE"`), surfaced so CLI callers can warn when a non-GLOBAL role is
+ * granted without tenants.
+ */
+export interface ApiClientGrantRoleResult {
+  apiClient: ApiClient;
+  changed: boolean;
+  roleScope: string;
+}
+
+/**
+ * Result of {@link ApiClientsResource.revokeRole}.
+ *
+ * `apiClient` reflects current server state: the pre-op GET when no write
+ * occurred, or the PUT response otherwise. `changed` is true iff a PUT was
+ * issued.
+ */
+export interface ApiClientRevokeRoleResult {
+  apiClient: ApiClient;
+  changed: boolean;
+}
