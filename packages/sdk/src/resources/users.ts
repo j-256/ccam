@@ -18,9 +18,14 @@ import type {
   ResetUserRequest,
   DisableUserRequest,
   UserSortField,
+  GrantRoleOptions,
+  GrantRoleResult,
+  RevokeRoleResult,
 } from '../types/index.js';
+import { CcamError } from '../errors.js';
 import { formatSort } from './sort.js';
 import { validateQuerySize } from './validation.js';
+import { mergeTenantsForRole } from './role-tenant-filter.js';
 
 export interface ListUsersOptions extends PaginationOptions {
   /**
@@ -470,5 +475,79 @@ export class UsersResource {
       undefined,
       { resource: 'users', operation: 'revokeVerifier' }
     );
+  }
+
+  /**
+   * Grant a role to a user. Idempotent: if the user already has the role (and,
+   * when tenants are provided, already has all requested tenants in its
+   * `roleTenantFilter` entry), returns `{ changed: false }` and skips the PUT.
+   *
+   * Implementation is a read-modify-write: GET /users/{id}, GET /roles/{roleId},
+   * then a conditional PUT /users/{id} with the new `roles` (and optionally
+   * `roleTenantFilter`). AM exposes no If-Match / ETag on /users, so there is
+   * a small race window between the GET and the PUT. PUT is PATCH-semantics:
+   * only `roles` and (when tenants are given) `roleTenantFilter` are sent.
+   *
+   * Non-GLOBAL roles granted without tenants will be inert until tenants are
+   * set. The SDK does not warn; the CLI surfaces this case.
+   *
+   * @throws {@link CcamError} when the role has `scope: GLOBAL` but tenants were provided.
+   * @throws {@link CcamNotFoundError} when the user or role is not found.
+   */
+  async grantRole(
+    id: string,
+    roleId: string,
+    opts?: GrantRoleOptions,
+  ): Promise<GrantRoleResult> {
+    const user = await this.get(id);
+    const role = await this.http.get<Role>(
+      `/dw/rest/v1/roles/${roleId}`,
+      undefined,
+      { resource: 'users', operation: 'grantRole' },
+    );
+
+    const tenants = opts?.tenants;
+    const wantsTenants = tenants !== undefined && tenants.length > 0;
+
+    if (wantsTenants && role.scope === 'GLOBAL') {
+      throw new CcamError(
+        `Role ${roleId} has scope GLOBAL and cannot have tenants`,
+        { status: 400, resource: 'users', operation: 'grantRole' },
+      );
+    }
+
+    const hasRole = user.roles.includes(roleId);
+    const nextRoles = hasRole ? user.roles : [...user.roles, roleId];
+
+    let nextFilter: string | undefined;
+    let filterChanged = false;
+    if (wantsTenants) {
+      const merged = mergeTenantsForRole(
+        user.roleTenantFilter ?? '',
+        role.roleEnumName,
+        tenants!,
+      );
+      if (merged.changed) {
+        nextFilter = merged.filter;
+        filterChanged = true;
+      }
+    }
+
+    if (hasRole && !filterChanged) {
+      return { user, changed: false, roleScope: role.scope };
+    }
+
+    const body: Record<string, unknown> = { roles: nextRoles };
+    if (filterChanged) {
+      body.roleTenantFilter = nextFilter;
+    }
+
+    const updated = await this.http.put<User>(
+      `/dw/rest/v1/users/${id}`,
+      body,
+      undefined,
+      { resource: 'users', operation: 'grantRole' },
+    );
+    return { user: updated, changed: true, roleScope: role.scope };
   }
 }

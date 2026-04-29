@@ -790,4 +790,224 @@ describe('UsersResource', () => {
       );
     });
   });
+
+  describe('grantRole', () => {
+    const baseUser = (overrides: Partial<User> = {}): User => ({
+      id: 'user-123',
+      mail: 'alice@example.com',
+      firstName: 'Alice',
+      lastName: 'Example',
+      displayName: 'Alice Example',
+      businessPhone: null,
+      homePhone: null,
+      mobilePhone: null,
+      preferredLocale: null,
+      roles: [],
+      primaryOrganization: 'org-1',
+      organizations: ['org-1'],
+      roleTenantFilter: '',
+      roleTenantFilterMap: {},
+      passwordExpirationTimestamp: null,
+      passwordModificationTimestamp: null,
+      createdAt: '2026-01-01T00:00:00Z',
+      lastModified: '2026-01-01T00:00:00Z',
+      lastLoginDate: null,
+      userState: 'ENABLED',
+      activationCodeCreationTimestamp: null,
+      sfUserId: null,
+      verifiers: [],
+      deleteTimestamp: null,
+      links: [],
+      ...overrides,
+    });
+
+    const globalRole = {
+      id: 'account-admin',
+      description: 'AM Account Admin',
+      roleEnumName: 'AM_ACCOUNT_ADMIN',
+      internalRole: false,
+      serviceType: 'AM',
+      permissions: [],
+      scope: 'GLOBAL',
+      targetType: null,
+      twoFAEnabled: false,
+      privileged: true,
+      links: [],
+    };
+
+    const instanceRole = {
+      id: 'ccdx-sbx-user',
+      description: 'Sandbox API User',
+      roleEnumName: 'CCDX_SBX_USER',
+      internalRole: false,
+      serviceType: 'CCDX',
+      permissions: [],
+      scope: 'INSTANCE',
+      targetType: null,
+      twoFAEnabled: false,
+      privileged: false,
+      links: [],
+    };
+
+    it('adds an absent role; no filter sent; changed=true', async () => {
+      const before = baseUser({ roles: ['api-admin'] });
+      const after = baseUser({ roles: ['api-admin', 'account-admin'] });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(globalRole);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      const result = await users.grantRole('user-123', 'account-admin');
+
+      expect(httpClient.put).toHaveBeenCalledWith(
+        '/dw/rest/v1/users/user-123',
+        { roles: ['api-admin', 'account-admin'] },
+        undefined,
+        { resource: 'users', operation: 'grantRole' }
+      );
+      expect(result).toEqual({ user: after, changed: true, roleScope: 'GLOBAL' });
+    });
+
+    it('is a no-op when the role is already present and no tenants given', async () => {
+      const before = baseUser({ roles: ['api-admin'] });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(globalRole);
+
+      const result = await users.grantRole('user-123', 'api-admin');
+
+      expect(httpClient.put).not.toHaveBeenCalled();
+      expect(result).toEqual({ user: before, changed: false, roleScope: 'GLOBAL' });
+    });
+
+    it('throws when a GLOBAL role is given tenants', async () => {
+      const before = baseUser({ roles: [] });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(globalRole);
+
+      await expect(
+        users.grantRole('user-123', 'account-admin', { tenants: ['x'] })
+      ).rejects.toThrow(/GLOBAL/);
+
+      expect(httpClient.put).not.toHaveBeenCalled();
+    });
+
+    it('throws when a GLOBAL role is given tenants even if already present', async () => {
+      const before = baseUser({ roles: ['account-admin'] });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(globalRole);
+
+      await expect(
+        users.grantRole('user-123', 'account-admin', { tenants: ['x'] })
+      ).rejects.toThrow(/GLOBAL/);
+
+      expect(httpClient.put).not.toHaveBeenCalled();
+    });
+
+    it('adds role + filter entry when role absent and tenants given', async () => {
+      const before = baseUser({ roles: [], roleTenantFilter: '' });
+      const after = baseUser({
+        roles: ['ccdx-sbx-user'],
+        roleTenantFilter: 'CCDX_SBX_USER:zysj_sbx',
+      });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(instanceRole);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      const result = await users.grantRole('user-123', 'ccdx-sbx-user', {
+        tenants: ['zysj_sbx'],
+      });
+
+      expect(httpClient.put).toHaveBeenCalledWith(
+        '/dw/rest/v1/users/user-123',
+        {
+          roles: ['ccdx-sbx-user'],
+          roleTenantFilter: 'CCDX_SBX_USER:zysj_sbx',
+        },
+        undefined,
+        { resource: 'users', operation: 'grantRole' }
+      );
+      expect(result).toEqual({ user: after, changed: true, roleScope: 'INSTANCE' });
+    });
+
+    it('adds filter entry only when role present but filter is missing it', async () => {
+      const before = baseUser({
+        roles: ['ccdx-sbx-user'],
+        roleTenantFilter: '',
+      });
+      const after = baseUser({
+        roles: ['ccdx-sbx-user'],
+        roleTenantFilter: 'CCDX_SBX_USER:zysj_sbx',
+      });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(instanceRole);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      const result = await users.grantRole('user-123', 'ccdx-sbx-user', {
+        tenants: ['zysj_sbx'],
+      });
+
+      expect(httpClient.put).toHaveBeenCalledWith(
+        '/dw/rest/v1/users/user-123',
+        {
+          roles: ['ccdx-sbx-user'],
+          roleTenantFilter: 'CCDX_SBX_USER:zysj_sbx',
+        },
+        undefined,
+        { resource: 'users', operation: 'grantRole' }
+      );
+      expect(result).toEqual({ user: after, changed: true, roleScope: 'INSTANCE' });
+    });
+
+    it('is a no-op when all requested tenants are already in the filter', async () => {
+      const before = baseUser({
+        roles: ['ccdx-sbx-user'],
+        roleTenantFilter: 'CCDX_SBX_USER:a,b',
+      });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(instanceRole);
+
+      const result = await users.grantRole('user-123', 'ccdx-sbx-user', {
+        tenants: ['a'],
+      });
+
+      expect(httpClient.put).not.toHaveBeenCalled();
+      expect(result).toEqual({ user: before, changed: false, roleScope: 'INSTANCE' });
+    });
+
+    it('unions requested tenants into existing filter entry', async () => {
+      const before = baseUser({
+        roles: ['ccdx-sbx-user'],
+        roleTenantFilter: 'CCDX_SBX_USER:a',
+      });
+      const after = baseUser({
+        roles: ['ccdx-sbx-user'],
+        roleTenantFilter: 'CCDX_SBX_USER:a,b',
+      });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(instanceRole);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      const result = await users.grantRole('user-123', 'ccdx-sbx-user', {
+        tenants: ['a', 'b'],
+      });
+
+      expect(httpClient.put).toHaveBeenCalledWith(
+        '/dw/rest/v1/users/user-123',
+        {
+          roles: ['ccdx-sbx-user'],
+          roleTenantFilter: 'CCDX_SBX_USER:a,b',
+        },
+        undefined,
+        { resource: 'users', operation: 'grantRole' }
+      );
+      expect(result).toEqual({ user: after, changed: true, roleScope: 'INSTANCE' });
+    });
+  });
 });
