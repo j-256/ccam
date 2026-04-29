@@ -324,6 +324,194 @@ describe('ApiClientsResource', () => {
       );
     });
   });
+
+  describe('grantRole', () => {
+    const baseClient = (overrides: Partial<ApiClient> = {}): ApiClient => ({
+      id: 'client-1',
+      name: 'Test Client',
+      description: null,
+      jwtPublicKey: null,
+      redirectUrls: [],
+      scopes: [],
+      defaultScopes: [],
+      organizations: [],
+      organizationCount: 0,
+      active: true,
+      roles: [],
+      roleTenantFilter: '',
+      roleTenantFilterMap: {},
+      tokenEndpointAuthMethod: 'client_secret_basic',
+      passwordModificationTimestamp: null,
+      lastAuthenticatedDate: null,
+      disabledTimestamp: null,
+      createdAt: '2026-01-01T00:00:00Z',
+      publicClient: false,
+      needsInitialPassword: false,
+      links: [],
+      ...overrides,
+    });
+
+    const globalRole = {
+      id: 'account-admin',
+      description: 'AM Account Admin',
+      roleEnumName: 'AM_ACCOUNT_ADMIN',
+      internalRole: false,
+      serviceType: 'AM',
+      permissions: [],
+      scope: 'GLOBAL',
+      targetType: null,
+      twoFAEnabled: false,
+      privileged: true,
+      links: [],
+    };
+
+    const instanceRole = {
+      id: 'ccdx-sbx-user',
+      description: 'Sandbox API User',
+      roleEnumName: 'CCDX_SBX_USER',
+      internalRole: false,
+      serviceType: 'CCDX',
+      permissions: [],
+      scope: 'INSTANCE',
+      targetType: null,
+      twoFAEnabled: false,
+      privileged: false,
+      links: [],
+    };
+
+    it('adds an absent role; changed=true', async () => {
+      const before = baseClient({ roles: ['api-admin'] });
+      const after = baseClient({ roles: ['api-admin', 'account-admin'] });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(globalRole);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      const result = await apiClients.grantRole('client-1', 'account-admin');
+
+      expect(httpClient.put).toHaveBeenCalledWith(
+        '/dw/rest/v1/apiclients/client-1',
+        { roles: ['api-admin', 'account-admin'] },
+        undefined,
+        { resource: 'apiClients', operation: 'grantRole' }
+      );
+      expect(result).toEqual({ apiClient: after, changed: true, roleScope: 'GLOBAL' });
+    });
+
+    it('is a no-op when already present and no tenants', async () => {
+      const before = baseClient({ roles: ['api-admin'] });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(globalRole);
+
+      const result = await apiClients.grantRole('client-1', 'api-admin');
+
+      expect(httpClient.put).not.toHaveBeenCalled();
+      expect(result).toEqual({ apiClient: before, changed: false, roleScope: 'GLOBAL' });
+    });
+
+    it('throws for GLOBAL role + tenants', async () => {
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(baseClient({ roles: [] }))
+        .mockResolvedValueOnce(globalRole);
+
+      await expect(
+        apiClients.grantRole('client-1', 'account-admin', { tenants: ['x'] })
+      ).rejects.toThrow(/GLOBAL/);
+
+      expect(httpClient.put).not.toHaveBeenCalled();
+    });
+
+    it('unions tenants into existing filter', async () => {
+      const before = baseClient({
+        roles: ['ccdx-sbx-user'],
+        roleTenantFilter: 'CCDX_SBX_USER:a',
+      });
+      const after = baseClient({
+        roles: ['ccdx-sbx-user'],
+        roleTenantFilter: 'CCDX_SBX_USER:a,b',
+      });
+      vi.mocked(httpClient.get)
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(instanceRole);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      const result = await apiClients.grantRole('client-1', 'ccdx-sbx-user', {
+        tenants: ['a', 'b'],
+      });
+
+      expect(httpClient.put).toHaveBeenCalledWith(
+        '/dw/rest/v1/apiclients/client-1',
+        {
+          roles: ['ccdx-sbx-user'],
+          roleTenantFilter: 'CCDX_SBX_USER:a,b',
+        },
+        undefined,
+        { resource: 'apiClients', operation: 'grantRole' }
+      );
+      expect(result).toEqual({ apiClient: after, changed: true, roleScope: 'INSTANCE' });
+    });
+  });
+
+  describe('revokeRole', () => {
+    const baseClient = (overrides: Partial<ApiClient> = {}): ApiClient => ({
+      id: 'client-1',
+      name: 'Test Client',
+      description: null,
+      jwtPublicKey: null,
+      redirectUrls: [],
+      scopes: [],
+      defaultScopes: [],
+      organizations: [],
+      organizationCount: 0,
+      active: true,
+      roles: [],
+      roleTenantFilter: '',
+      roleTenantFilterMap: {},
+      tokenEndpointAuthMethod: 'client_secret_basic',
+      passwordModificationTimestamp: null,
+      lastAuthenticatedDate: null,
+      disabledTimestamp: null,
+      createdAt: '2026-01-01T00:00:00Z',
+      publicClient: false,
+      needsInitialPassword: false,
+      links: [],
+      ...overrides,
+    });
+
+    it('is a no-op when role not present', async () => {
+      const before = baseClient({ roles: ['api-admin'] });
+      vi.mocked(httpClient.get).mockResolvedValueOnce(before);
+
+      const result = await apiClients.revokeRole('client-1', 'account-admin');
+
+      expect(httpClient.put).not.toHaveBeenCalled();
+      expect(result).toEqual({ apiClient: before, changed: false });
+    });
+
+    it('sends only the filtered roles array', async () => {
+      const before = baseClient({
+        roles: ['ccdx-sbx-user', 'api-admin'],
+        roleTenantFilter: 'CCDX_SBX_USER:a',
+      });
+      const after = baseClient({
+        roles: ['api-admin'],
+        roleTenantFilter: '',
+      });
+      vi.mocked(httpClient.get).mockResolvedValueOnce(before);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      const result = await apiClients.revokeRole('client-1', 'ccdx-sbx-user');
+
+      expect(httpClient.put).toHaveBeenCalledWith(
+        '/dw/rest/v1/apiclients/client-1',
+        { roles: ['api-admin'] },
+        undefined,
+        { resource: 'apiClients', operation: 'revokeRole' }
+      );
+      expect(result).toEqual({ apiClient: after, changed: true });
+    });
+  });
 });
 
 describe('RolesResource', () => {

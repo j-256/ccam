@@ -16,9 +16,15 @@ import type {
   UpdateApiClientRequest,
   SetPasswordRequest,
   ApiClientSortField,
+  Role,
+  GrantRoleOptions,
+  ApiClientGrantRoleResult,
+  ApiClientRevokeRoleResult,
 } from '../types/index.js';
 import { formatSort } from './sort.js';
 import { validateQuerySize } from './validation.js';
+import { mergeTenantsForRole } from './role-tenant-filter.js';
+import { CcamError } from '../errors.js';
 
 /** Expand options for API client get endpoint */
 export type ExpandApiClients = 'organizations' | 'roles' | 'organizations,roles';
@@ -224,5 +230,97 @@ export class ApiClientsResource {
       undefined,
       { resource: 'apiClients', operation: 'setAuthType' }
     );
+  }
+
+  /**
+   * Grant a role to an API client. Idempotent: if the client already has the
+   * role (and, when tenants are provided, already has all requested tenants
+   * in its `roleTenantFilter`), returns `{ changed: false }` and skips the PUT.
+   *
+   * Implementation is a read-modify-write: GET /apiclients/{id}, GET /roles/{roleId},
+   * then a conditional PUT /apiclients/{id}. AM exposes no If-Match / ETag,
+   * so there is a small race window between the GET and the PUT. PUT is
+   * PATCH-semantics: only `roles` and (when tenants given) `roleTenantFilter`
+   * are sent.
+   *
+   * @throws {@link CcamError} when the role has `scope: GLOBAL` but tenants were provided.
+   */
+  async grantRole(
+    id: string,
+    roleId: string,
+    opts?: GrantRoleOptions,
+  ): Promise<ApiClientGrantRoleResult> {
+    const apiClient = await this.get(id);
+    const role = await this.http.get<Role>(
+      `/dw/rest/v1/roles/${roleId}`,
+      undefined,
+      { resource: 'apiClients', operation: 'grantRole' },
+    );
+
+    const tenants = opts?.tenants;
+    const wantsTenants = tenants !== undefined && tenants.length > 0;
+
+    if (wantsTenants && role.scope === 'GLOBAL') {
+      throw new CcamError(
+        `Role ${roleId} has scope GLOBAL and cannot have tenants`,
+        { status: 400, resource: 'apiClients', operation: 'grantRole' },
+      );
+    }
+
+    const hasRole = apiClient.roles.includes(roleId);
+    const nextRoles = hasRole ? apiClient.roles : [...apiClient.roles, roleId];
+
+    let nextFilter: string | undefined;
+    let filterChanged = false;
+    if (wantsTenants) {
+      const merged = mergeTenantsForRole(
+        apiClient.roleTenantFilter ?? '',
+        role.roleEnumName,
+        tenants!,
+      );
+      if (merged.changed) {
+        nextFilter = merged.filter;
+        filterChanged = true;
+      }
+    }
+
+    if (hasRole && !filterChanged) {
+      return { apiClient, changed: false, roleScope: role.scope };
+    }
+
+    const body: Record<string, unknown> = { roles: nextRoles };
+    if (filterChanged) {
+      body.roleTenantFilter = nextFilter;
+    }
+
+    const updated = await this.http.put<ApiClient>(
+      `/dw/rest/v1/apiclients/${id}`,
+      body,
+      undefined,
+      { resource: 'apiClients', operation: 'grantRole' },
+    );
+    return { apiClient: updated, changed: true, roleScope: role.scope };
+  }
+
+  /**
+   * Revoke a role from an API client. Idempotent: returns `{ changed: false }`
+   * and skips the PUT if the role is not present. AM strips the corresponding
+   * `roleTenantFilter` entry server-side.
+   */
+  async revokeRole(id: string, roleId: string): Promise<ApiClientRevokeRoleResult> {
+    const apiClient = await this.get(id);
+
+    if (!apiClient.roles.includes(roleId)) {
+      return { apiClient, changed: false };
+    }
+
+    const nextRoles = apiClient.roles.filter((r) => r !== roleId);
+    const updated = await this.http.put<ApiClient>(
+      `/dw/rest/v1/apiclients/${id}`,
+      { roles: nextRoles },
+      undefined,
+      { resource: 'apiClients', operation: 'revokeRole' },
+    );
+    return { apiClient: updated, changed: true };
   }
 }
