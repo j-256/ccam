@@ -243,7 +243,11 @@ export class ApiClientsResource {
    * PATCH-semantics: only `roles` and (when tenants given) `roleTenantFilter`
    * are sent.
    *
+   * Non-GLOBAL roles granted without tenants will be inert until tenants are
+   * set. The SDK does not warn; the CLI surfaces this case.
+   *
    * @throws {@link CcamError} when the role has `scope: GLOBAL` but tenants were provided.
+   * @throws {@link CcamNotFoundError} when the API client or role is not found.
    */
   async grantRole(
     id: string,
