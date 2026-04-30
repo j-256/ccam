@@ -230,4 +230,91 @@ describe.skipIf(!ENV)('users (integration)', () => {
       ).rejects.toBeInstanceOf(CcamNotFoundError);
     });
   });
+
+  describe('grantRole / revokeRole', () => {
+    // Fixture role: scoped (INSTANCE) role that james.klein@salesforce.com
+    // currently holds. We'll cycle its tenant list, not add/remove the role
+    // itself, so the baseline never drifts.
+    const FIXTURE_ROLE = 'ccdx-sbx-user';
+    const FIXTURE_ROLE_ENUM = 'CCDX_SBX_USER';
+    const TEST_TENANT = 'tbdx_sbx';
+
+    it('grantRole no-op returns changed=false and does not mutate server state', async () => {
+      const before = await client.users.get(ENV!.userId);
+      expect(before.roles).toContain(FIXTURE_ROLE);
+
+      const result = await client.users.grantRole(ENV!.userId, FIXTURE_ROLE);
+      expect(result.changed).toBe(false);
+
+      const after = await client.users.get(ENV!.userId);
+      expect(after.roleTenantFilter).toBe(before.roleTenantFilter);
+      expect(after.roles.sort()).toEqual(before.roles.sort());
+    });
+
+    it('adds then removes a tenant from the filter end-to-end', async () => {
+      const before = await client.users.get(ENV!.userId);
+      expect(before.roles).toContain(FIXTURE_ROLE);
+      expect(before.roleTenantFilter).not.toMatch(new RegExp(`${FIXTURE_ROLE_ENUM}:[^;]*${TEST_TENANT}`));
+
+      // Add the probe tenant via grantRole.
+      const granted = await client.users.grantRole(ENV!.userId, FIXTURE_ROLE, {
+        tenants: [TEST_TENANT],
+      });
+      expect(granted.changed).toBe(true);
+      expect(granted.user.roleTenantFilter).toMatch(new RegExp(`${FIXTURE_ROLE_ENUM}:[^;]*${TEST_TENANT}`));
+
+      // Idempotency: granting the same tenant again is a no-op.
+      const second = await client.users.grantRole(ENV!.userId, FIXTURE_ROLE, {
+        tenants: [TEST_TENANT],
+      });
+      expect(second.changed).toBe(false);
+
+      // Restore by re-PUTting the baseline filter directly (revokeRole is
+      // tested below; we don't want to bundle cleanup with the feature under
+      // test).
+      await client.users.update(ENV!.userId, { roleTenantFilter: before.roleTenantFilter });
+
+      const restored = await client.users.get(ENV!.userId);
+      expect(restored.roleTenantFilter).toBe(before.roleTenantFilter);
+    });
+
+    it('revokeRole + regrant round-trips cleanly and server auto-strips filter', async () => {
+      const before = await client.users.get(ENV!.userId);
+      expect(before.roles).toContain(FIXTURE_ROLE);
+      const originalFilter = before.roleTenantFilter;
+      expect(originalFilter).toMatch(new RegExp(`${FIXTURE_ROLE_ENUM}:`));
+
+      // Revoke.
+      const revoked = await client.users.revokeRole(ENV!.userId, FIXTURE_ROLE);
+      expect(revoked.changed).toBe(true);
+      expect(revoked.user.roles).not.toContain(FIXTURE_ROLE);
+      // Server auto-strips the filter entry for the removed role.
+      expect(revoked.user.roleTenantFilter).not.toMatch(new RegExp(`${FIXTURE_ROLE_ENUM}:`));
+
+      // Idempotent revoke.
+      const revokedAgain = await client.users.revokeRole(ENV!.userId, FIXTURE_ROLE);
+      expect(revokedAgain.changed).toBe(false);
+
+      // Regrant with the original tenants to restore baseline.
+      // Parse the original filter to extract this role's tenants.
+      const entry = originalFilter.split(';').find((s) => s.startsWith(`${FIXTURE_ROLE_ENUM}:`));
+      expect(entry).toBeDefined();
+      const originalTenants = entry!.slice(FIXTURE_ROLE_ENUM.length + 1).split(',');
+
+      await client.users.grantRole(ENV!.userId, FIXTURE_ROLE, { tenants: originalTenants });
+
+      const restored = await client.users.get(ENV!.userId);
+      expect(restored.roles).toContain(FIXTURE_ROLE);
+      // Filter contains the same role entry as before -- exact string equality
+      // may not hold because other entries could reorder; we assert the per-role
+      // slice matches.
+      const restoredEntry = restored.roleTenantFilter
+        .split(';')
+        .find((s) => s.startsWith(`${FIXTURE_ROLE_ENUM}:`));
+      const beforeEntry = originalFilter
+        .split(';')
+        .find((s) => s.startsWith(`${FIXTURE_ROLE_ENUM}:`));
+      expect(restoredEntry).toBe(beforeEntry);
+    });
+  });
 });

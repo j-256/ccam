@@ -251,4 +251,78 @@ describe.skipIf(!ENV)('apiClients (integration)', () => {
       }
     });
   });
+
+  describe('grantRole / revokeRole', () => {
+    // Safe-to-cycle role on TEST_API_CLIENT_ID. Do NOT touch api-admin --
+    // that is the role authorizing this suite.
+    const FIXTURE_ROLE = 'ccdx-sbx-user';
+
+    it('revoke + regrant round-trips the fixture role without disturbing api-admin', async () => {
+      const before = await client.apiClients.get(ENV!.apiClientId);
+      expect(before.roles).toContain('api-admin');
+      const hadFixture = before.roles.includes(FIXTURE_ROLE);
+
+      if (!hadFixture) {
+        // Baseline doesn't include the fixture; add it, assert, then remove
+        // at the end.
+        const granted = await client.apiClients.grantRole(ENV!.apiClientId, FIXTURE_ROLE);
+        expect(granted.changed).toBe(true);
+      }
+
+      // Revoke the fixture, assert api-admin survives.
+      const revoked = await client.apiClients.revokeRole(ENV!.apiClientId, FIXTURE_ROLE);
+      expect(revoked.changed).toBe(true);
+      expect(revoked.apiClient.roles).not.toContain(FIXTURE_ROLE);
+      expect(revoked.apiClient.roles).toContain('api-admin');
+
+      // Idempotent revoke.
+      const revokedAgain = await client.apiClients.revokeRole(ENV!.apiClientId, FIXTURE_ROLE);
+      expect(revokedAgain.changed).toBe(false);
+
+      // Restore to baseline.
+      if (hadFixture) {
+        await client.apiClients.grantRole(ENV!.apiClientId, FIXTURE_ROLE);
+      }
+
+      const restored = await client.apiClients.get(ENV!.apiClientId);
+      expect(restored.roles).toContain('api-admin');
+      if (hadFixture) {
+        expect(restored.roles).toContain(FIXTURE_ROLE);
+      }
+    });
+
+    it('grant with tenants unions correctly', async () => {
+      const before = await client.apiClients.get(ENV!.apiClientId);
+      const startedWithFixture = before.roles.includes(FIXTURE_ROLE);
+      const beforeFilter = before.roleTenantFilter;
+
+      // Ensure role is present.
+      if (!startedWithFixture) {
+        await client.apiClients.grantRole(ENV!.apiClientId, FIXTURE_ROLE);
+      }
+
+      const TEST_TENANT = 'tbdx_sbx';
+      const granted = await client.apiClients.grantRole(
+        ENV!.apiClientId,
+        FIXTURE_ROLE,
+        { tenants: [TEST_TENANT] },
+      );
+      expect(granted.changed).toBe(true);
+      expect(granted.apiClient.roleTenantFilter).toMatch(
+        new RegExp(`CCDX_SBX_USER:[^;]*${TEST_TENANT}`),
+      );
+
+      // Restore baseline. revokeRole strips the filter entry too.
+      if (!startedWithFixture) {
+        await client.apiClients.revokeRole(ENV!.apiClientId, FIXTURE_ROLE);
+      } else {
+        // Put the original filter back directly.
+        await client.apiClients.update(ENV!.apiClientId, { roleTenantFilter: beforeFilter });
+      }
+
+      const restored = await client.apiClients.get(ENV!.apiClientId);
+      expect(restored.roleTenantFilter).toBe(beforeFilter);
+      expect(restored.roles.includes(FIXTURE_ROLE)).toBe(startedWithFixture);
+    });
+  });
 });
