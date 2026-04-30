@@ -598,6 +598,23 @@ describe('ApiClientsResource', () => {
       );
       expect(result).toEqual({ apiClient: after, changed: true });
     });
+
+    it('does not fetch /roles/{id}', async () => {
+      const before = baseClient({ roles: ['api-admin'] });
+      const after = baseClient({ roles: [] });
+      vi.mocked(httpClient.get).mockResolvedValueOnce(before);
+      vi.mocked(httpClient.put).mockResolvedValueOnce(after);
+
+      await apiClients.revokeRole('client-1', 'api-admin');
+
+      // Only one GET call: /apiclients/{id}. No /roles/{id} lookup.
+      expect(vi.mocked(httpClient.get)).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(httpClient.get)).toHaveBeenCalledWith(
+        '/dw/rest/v1/apiclients/client-1',
+        undefined,
+        { resource: 'apiClients', operation: 'get' }
+      );
+    });
   });
 });
 

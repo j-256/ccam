@@ -64,10 +64,10 @@ If you need to deploy cartridges or manage sandboxes, use sfcc-ci. It's the only
 | **Org Configurations** | -- | `org-config get` |
 | **Instances** | treated as OCAPI target | `instance list`, `instance get`, `instance validate-filter` |
 
-Two gaps are worth calling out in both directions:
+A few things are worth calling out in both directions:
 
-- sfcc-ci has **`client:rotate`**; ccam does not (yet).
-- sfcc-ci exposes **`role:grant` / `role:revoke`** as first-class commands. ccam models role assignment as a field on the user (`user update --roles`), because that's what the underlying AM PATCH accepts. sfcc-ci's form is more ergonomic for a single grant; ccam's is closer to the API and composes with other user edits.
+- **Role grant / revoke.** sfcc-ci's commands are role-first (`role:grant ROLE_ID --user USER_ID`); ccam's are resource-first (`user grant-role USER_ID ROLE_ID`, `client grant-role CLIENT_ID ROLE_ID`). Both support instance-scoped roles with tenant filters.
+- **Client credential rotation.** sfcc-ci has `client:rotate`; ccam does not (yet).
 
 ## Tooling and UX
 
