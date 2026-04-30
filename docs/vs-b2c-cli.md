@@ -106,6 +106,7 @@ If you need OCAPI, sandboxes, SLAS, MRT, or any non-AM Commerce Cloud surface, b
 - **Named auth profiles** with per-profile switching. b2c-cli uses a single stateful session shared with sfcc-ci
 - **Interactive TUI** with drill-down navigation (`ccam` or `ccam --interactive`)
 - **PKCE on the authorization code flow**. b2c-cli uses the implicit grant for browser-based login
+- **Password reset after public-to-confidential switch**. When a client is flipped from public back to confidential it has no password set. ccam's `client set-password` handles this correctly (the `--old-password` flag is optional, matching the server's behavior); b2c-cli's `am clients password` requires the current password unconditionally and can't set one in this state.
 
 ## What b2c-cli offers that ccam doesn't
 

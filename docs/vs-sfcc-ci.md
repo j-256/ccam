@@ -67,7 +67,8 @@ If you need to deploy cartridges or manage sandboxes, use sfcc-ci. It's the only
 A few things are worth calling out in both directions:
 
 - **Role grant / revoke.** sfcc-ci's commands are role-first (`role:grant ROLE_ID --user USER_ID`); ccam's are resource-first (`user grant-role USER_ID ROLE_ID`, `client grant-role CLIENT_ID ROLE_ID`). Both support instance-scoped roles with tenant filters.
-- **Client credential rotation.** sfcc-ci has `client:rotate`; ccam does not (yet).
+- **Client credential rotation.** sfcc-ci has `client:rotate`, which clones a reference client into a new client with a fresh secret (cutover pattern, not a password change on the existing client). ccam has no single-command equivalent but composes the same pattern via the SDK's `get` + `create`.
+- **Client password change.** ccam has `client set-password` for changing the secret on an existing client in place; sfcc-ci doesn't offer this.
 
 ## Tooling and UX
 
