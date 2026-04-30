@@ -499,6 +499,69 @@ async function revokeUserVerifier(
   }
 }
 
+async function grantUserRole(
+  loginOrId: string,
+  roleId: string,
+  options: GlobalOptions & { id?: boolean; tenants?: string },
+): Promise<void> {
+  try {
+    const resolved = resolveGlobalOptions(options);
+    const profileResolved = await resolveProfile({
+      flags: { profile: options.profile, host: resolved.host },
+    });
+    const client = await createClientFromResolved(profileResolved);
+
+    const userId = options.id ? loginOrId : (await client.users.getByLogin(loginOrId)).id;
+    const tenants = options.tenants
+      ? options.tenants.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+      : undefined;
+    const opts = tenants !== undefined ? { tenants } : undefined;
+
+    const result = await client.users.grantRole(userId, roleId, opts);
+    const subject = loginOrId;
+
+    if (result.changed) {
+      process.stderr.write(`Granted role ${roleId} to user ${subject}\n`);
+    } else {
+      process.stderr.write(`User ${subject} already has role ${roleId} (no changes)\n`);
+    }
+
+    if (result.roleScope !== 'GLOBAL' && tenants === undefined) {
+      process.stderr.write(
+        `Warning: role ${roleId} has scope ${result.roleScope}; it will be inert until tenants are set\n`
+      );
+    }
+  } catch (err) {
+    handleError(err);
+  }
+}
+
+async function revokeUserRole(
+  loginOrId: string,
+  roleId: string,
+  options: GlobalOptions & { id?: boolean },
+): Promise<void> {
+  try {
+    const resolved = resolveGlobalOptions(options);
+    const profileResolved = await resolveProfile({
+      flags: { profile: options.profile, host: resolved.host },
+    });
+    const client = await createClientFromResolved(profileResolved);
+
+    const userId = options.id ? loginOrId : (await client.users.getByLogin(loginOrId)).id;
+    const result = await client.users.revokeRole(userId, roleId);
+    const subject = loginOrId;
+
+    if (result.changed) {
+      process.stderr.write(`Revoked role ${roleId} from user ${subject}\n`);
+    } else {
+      process.stderr.write(`User ${subject} does not have role ${roleId} (no changes)\n`);
+    }
+  } catch (err) {
+    handleError(err);
+  }
+}
+
 export function registerUserCommands(program: Command): void {
   const user = program
     .command('user')
@@ -644,4 +707,27 @@ export function registerUserCommands(program: Command): void {
     .description('Revoke an MFA verifier for a user');
 
   addGlobalOptions(revokeVerifier).action(revokeUserVerifier);
+
+  // user grant-role
+  const grantRole = user
+    .command('grant-role')
+    .argument('<login-or-id>', 'User login (email) or ID')
+    .argument('<role-id>', 'Role ID to grant (e.g. "ccdx-sbx-user")')
+    .description('Grant a role to a user (idempotent; read-modify-write on the user resource)');
+
+  addGlobalOptions(grantRole)
+    .option('--id', 'Treat first argument as user ID instead of login')
+    .option('--tenants <csv>', 'Comma-separated tenants for scoped roles; union-merged into roleTenantFilter')
+    .action(grantUserRole);
+
+  // user revoke-role
+  const revokeRole = user
+    .command('revoke-role')
+    .argument('<login-or-id>', 'User login (email) or ID')
+    .argument('<role-id>', 'Role ID to revoke')
+    .description('Revoke a role from a user (idempotent; server auto-strips any tenant-filter entry)');
+
+  addGlobalOptions(revokeRole)
+    .option('--id', 'Treat first argument as user ID instead of login')
+    .action(revokeUserRole);
 }

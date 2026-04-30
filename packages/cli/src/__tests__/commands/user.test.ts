@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
 import { selectUserFinder, registerUserCommands } from '../../commands/user.js';
 
@@ -18,6 +18,8 @@ const mockUsers = {
   instances: vi.fn(),
   assignedRealms: vi.fn(),
   assignedInstances: vi.fn(),
+  grantRole: vi.fn(),
+  revokeRole: vi.fn(),
   search: {
     findByOrg: vi.fn(),
     findAllByOrg: vi.fn(),
@@ -439,5 +441,165 @@ describe('user commands', () => {
       expect(mockUsers.getByLogin).toHaveBeenCalledWith('user@example.com');
       expect(mockUsers.assignedInstances).toHaveBeenCalledWith('user-123');
     });
+  });
+});
+
+describe('user grant-role command', () => {
+  let program: Command;
+  let stderr: string;
+  let stderrSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    stderr = '';
+    stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
+      stderr += typeof chunk === 'string' ? chunk : String(chunk);
+      return true;
+    });
+    program = new Command();
+    program.exitOverride();
+    registerUserCommands(program);
+  });
+
+  afterEach(() => {
+    stderrSpy.mockRestore();
+  });
+
+  it('resolves login to id, then calls grantRole', async () => {
+    mockUsers.getByLogin.mockResolvedValueOnce({ id: 'user-123', mail: 'alice@example.com' });
+    mockUsers.grantRole.mockResolvedValueOnce({
+      user: { id: 'user-123', roles: ['account-admin'] },
+      changed: true,
+      roleScope: 'GLOBAL',
+    });
+
+    await program.parseAsync(['node', 'ccam', 'user', 'grant-role', 'alice@example.com', 'account-admin']);
+
+    expect(mockUsers.getByLogin).toHaveBeenCalledWith('alice@example.com');
+    expect(mockUsers.grantRole).toHaveBeenCalledWith('user-123', 'account-admin', undefined);
+    expect(stderr).toMatch(/Granted role account-admin to user alice@example.com/);
+  });
+
+  it('bypasses login lookup with --id', async () => {
+    mockUsers.grantRole.mockResolvedValueOnce({
+      user: { id: 'user-123', roles: ['account-admin'] },
+      changed: true,
+      roleScope: 'GLOBAL',
+    });
+
+    await program.parseAsync(['node', 'ccam', 'user', 'grant-role', '--id', 'user-123', 'account-admin']);
+
+    expect(mockUsers.getByLogin).not.toHaveBeenCalled();
+    expect(mockUsers.grantRole).toHaveBeenCalledWith('user-123', 'account-admin', undefined);
+  });
+
+  it('splits --tenants and passes as opts', async () => {
+    mockUsers.getByLogin.mockResolvedValueOnce({ id: 'user-123' });
+    mockUsers.grantRole.mockResolvedValueOnce({
+      user: { id: 'user-123' },
+      changed: true,
+      roleScope: 'INSTANCE',
+    });
+
+    await program.parseAsync([
+      'node', 'ccam', 'user', 'grant-role',
+      'alice@example.com', 'ccdx-sbx-user',
+      '--tenants', 'tbdx_dev,tbdx_stg',
+    ]);
+
+    expect(mockUsers.grantRole).toHaveBeenCalledWith(
+      'user-123',
+      'ccdx-sbx-user',
+      { tenants: ['tbdx_dev', 'tbdx_stg'] },
+    );
+  });
+
+  it('prints no-op stderr notice when changed=false', async () => {
+    mockUsers.getByLogin.mockResolvedValueOnce({ id: 'user-123' });
+    mockUsers.grantRole.mockResolvedValueOnce({
+      user: { id: 'user-123', roles: ['account-admin'] },
+      changed: false,
+      roleScope: 'GLOBAL',
+    });
+
+    await program.parseAsync(['node', 'ccam', 'user', 'grant-role', 'alice@example.com', 'account-admin']);
+
+    expect(stderr).toMatch(/already has role account-admin.*no changes/);
+  });
+
+  it('warns when a non-GLOBAL role is granted without --tenants', async () => {
+    mockUsers.getByLogin.mockResolvedValueOnce({ id: 'user-123' });
+    mockUsers.grantRole.mockResolvedValueOnce({
+      user: { id: 'user-123', roles: ['ccdx-sbx-user'] },
+      changed: true,
+      roleScope: 'INSTANCE',
+    });
+
+    await program.parseAsync(['node', 'ccam', 'user', 'grant-role', 'alice@example.com', 'ccdx-sbx-user']);
+
+    expect(stderr).toMatch(/Granted role ccdx-sbx-user/);
+    expect(stderr).toMatch(/scope INSTANCE.*inert until tenants are set/);
+  });
+
+  it('does not warn when tenants are supplied', async () => {
+    mockUsers.getByLogin.mockResolvedValueOnce({ id: 'user-123' });
+    mockUsers.grantRole.mockResolvedValueOnce({
+      user: { id: 'user-123', roles: ['ccdx-sbx-user'] },
+      changed: true,
+      roleScope: 'INSTANCE',
+    });
+
+    await program.parseAsync([
+      'node', 'ccam', 'user', 'grant-role',
+      'alice@example.com', 'ccdx-sbx-user',
+      '--tenants', 'tbdx_stg',
+    ]);
+
+    expect(stderr).not.toMatch(/inert until tenants are set/);
+  });
+});
+
+describe('user revoke-role command', () => {
+  let program: Command;
+  let stderr: string;
+  let stderrSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    stderr = '';
+    stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
+      stderr += typeof chunk === 'string' ? chunk : String(chunk);
+      return true;
+    });
+    program = new Command();
+    program.exitOverride();
+    registerUserCommands(program);
+  });
+
+  afterEach(() => {
+    stderrSpy.mockRestore();
+  });
+
+  it('resolves login and calls revokeRole', async () => {
+    mockUsers.getByLogin.mockResolvedValueOnce({ id: 'user-123' });
+    mockUsers.revokeRole.mockResolvedValueOnce({
+      user: { id: 'user-123' },
+      changed: true,
+    });
+
+    await program.parseAsync(['node', 'ccam', 'user', 'revoke-role', 'alice@example.com', 'account-admin']);
+
+    expect(mockUsers.revokeRole).toHaveBeenCalledWith('user-123', 'account-admin');
+    expect(stderr).toMatch(/Revoked role account-admin from user alice@example.com/);
+  });
+
+  it('prints no-op stderr notice when changed=false', async () => {
+    mockUsers.getByLogin.mockResolvedValueOnce({ id: 'user-123' });
+    mockUsers.revokeRole.mockResolvedValueOnce({
+      user: { id: 'user-123' },
+      changed: false,
+    });
+
+    await program.parseAsync(['node', 'ccam', 'user', 'revoke-role', 'alice@example.com', 'account-admin']);
+
+    expect(stderr).toMatch(/does not have role account-admin.*no changes/);
   });
 });
