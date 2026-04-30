@@ -265,6 +265,65 @@ async function setClientAuthType(
   }
 }
 
+async function grantClientRole(
+  id: string,
+  roleId: string,
+  options: GlobalOptions & { tenants?: string },
+): Promise<void> {
+  try {
+    const resolved = resolveGlobalOptions(options);
+    const profileResolved = await resolveProfile({
+      flags: { profile: options.profile, host: resolved.host },
+    });
+    const client = await createClientFromResolved(profileResolved);
+
+    const tenants = options.tenants
+      ? options.tenants.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+      : undefined;
+    const opts = tenants !== undefined ? { tenants } : undefined;
+
+    const result = await client.apiClients.grantRole(id, roleId, opts);
+
+    if (result.changed) {
+      process.stderr.write(`Granted role ${roleId} to API client ${id}\n`);
+    } else {
+      process.stderr.write(`API client ${id} already has role ${roleId} (no changes)\n`);
+    }
+
+    if (result.roleScope !== 'GLOBAL' && (tenants === undefined || tenants.length === 0)) {
+      process.stderr.write(
+        `Warning: role ${roleId} has scope ${result.roleScope}; it will be inert until tenants are set\n`
+      );
+    }
+  } catch (err) {
+    handleError(err);
+  }
+}
+
+async function revokeClientRole(
+  id: string,
+  roleId: string,
+  options: GlobalOptions,
+): Promise<void> {
+  try {
+    const resolved = resolveGlobalOptions(options);
+    const profileResolved = await resolveProfile({
+      flags: { profile: options.profile, host: resolved.host },
+    });
+    const client = await createClientFromResolved(profileResolved);
+
+    const result = await client.apiClients.revokeRole(id, roleId);
+
+    if (result.changed) {
+      process.stderr.write(`Revoked role ${roleId} from API client ${id}\n`);
+    } else {
+      process.stderr.write(`API client ${id} does not have role ${roleId} (no changes)\n`);
+    }
+  } catch (err) {
+    handleError(err);
+  }
+}
+
 export function registerClientCommands(program: Command): void {
   const apiClient = program
     .command('client')
@@ -374,4 +433,24 @@ export function registerClientCommands(program: Command): void {
     .option('--public', 'Set as public client')
     .option('--confidential', 'Set as confidential client')
     .action(setClientAuthType);
+
+  // client grant-role
+  const grantRole = apiClient
+    .command('grant-role')
+    .argument('<id>', 'API client ID')
+    .argument('<role-id>', 'Role ID to grant (e.g. "ccdx-sbx-user")')
+    .description('Grant a role to an API client (idempotent; read-modify-write on the client resource)');
+
+  addGlobalOptions(grantRole)
+    .option('--tenants <csv>', 'Comma-separated tenants for scoped roles; union-merged into roleTenantFilter')
+    .action(grantClientRole);
+
+  // client revoke-role
+  const revokeRole = apiClient
+    .command('revoke-role')
+    .argument('<id>', 'API client ID')
+    .argument('<role-id>', 'Role ID to revoke')
+    .description('Revoke a role from an API client (idempotent; server auto-strips any tenant-filter entry)');
+
+  addGlobalOptions(revokeRole).action(revokeClientRole);
 }

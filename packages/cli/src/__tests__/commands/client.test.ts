@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
 import { registerClientCommands } from '../../commands/client.js';
 
@@ -14,6 +14,8 @@ const mockApiClients = {
   auditLogs: vi.fn(),
   assignedRealms: vi.fn(),
   assignedInstances: vi.fn(),
+  grantRole: vi.fn(),
+  revokeRole: vi.fn(),
 };
 
 const mockClient = {
@@ -192,5 +194,143 @@ describe('client commands', () => {
 
       expect(mockApiClients.assignedInstances).toHaveBeenCalledWith('client-123');
     });
+  });
+});
+
+describe('client grant-role command', () => {
+  let program: Command;
+  let stderr: string;
+  let stderrSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    stderr = '';
+    stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
+      stderr += typeof chunk === 'string' ? chunk : String(chunk);
+      return true;
+    });
+    program = new Command();
+    program.exitOverride();
+    registerClientCommands(program);
+  });
+
+  afterEach(() => {
+    stderrSpy.mockRestore();
+  });
+
+  it('calls grantRole with id + role', async () => {
+    mockApiClients.grantRole.mockResolvedValueOnce({
+      apiClient: { id: 'client-1', roles: ['account-admin'] },
+      changed: true,
+      roleScope: 'GLOBAL',
+    });
+
+    await program.parseAsync(['node', 'ccam', 'client', 'grant-role', 'client-1', 'account-admin']);
+
+    expect(mockApiClients.grantRole).toHaveBeenCalledWith('client-1', 'account-admin', undefined);
+    expect(stderr).toMatch(/Granted role account-admin to API client client-1/);
+  });
+
+  it('splits --tenants and passes as opts', async () => {
+    mockApiClients.grantRole.mockResolvedValueOnce({
+      apiClient: { id: 'client-1' },
+      changed: true,
+      roleScope: 'INSTANCE',
+    });
+
+    await program.parseAsync([
+      'node', 'ccam', 'client', 'grant-role',
+      'client-1', 'ccdx-sbx-user',
+      '--tenants', 'tbdx_stg',
+    ]);
+
+    expect(mockApiClients.grantRole).toHaveBeenCalledWith(
+      'client-1',
+      'ccdx-sbx-user',
+      { tenants: ['tbdx_stg'] },
+    );
+  });
+
+  it('prints no-op stderr notice when changed=false', async () => {
+    mockApiClients.grantRole.mockResolvedValueOnce({
+      apiClient: { id: 'client-1', roles: ['account-admin'] },
+      changed: false,
+      roleScope: 'GLOBAL',
+    });
+
+    await program.parseAsync(['node', 'ccam', 'client', 'grant-role', 'client-1', 'account-admin']);
+
+    expect(stderr).toMatch(/API client client-1 already has role account-admin.*no changes/);
+  });
+
+  it('warns when a non-GLOBAL role is granted without --tenants', async () => {
+    mockApiClients.grantRole.mockResolvedValueOnce({
+      apiClient: { id: 'client-1', roles: ['ccdx-sbx-user'] },
+      changed: true,
+      roleScope: 'INSTANCE',
+    });
+
+    await program.parseAsync(['node', 'ccam', 'client', 'grant-role', 'client-1', 'ccdx-sbx-user']);
+
+    expect(stderr).toMatch(/scope INSTANCE.*inert until tenants are set/);
+  });
+
+  it('warns when --tenants is an empty string for non-GLOBAL role', async () => {
+    mockApiClients.grantRole.mockResolvedValueOnce({
+      apiClient: { id: 'client-1', roles: ['ccdx-sbx-user'] },
+      changed: true,
+      roleScope: 'INSTANCE',
+    });
+
+    await program.parseAsync([
+      'node', 'ccam', 'client', 'grant-role',
+      'client-1', 'ccdx-sbx-user',
+      '--tenants', '',
+    ]);
+
+    expect(stderr).toMatch(/scope INSTANCE.*inert until tenants are set/);
+  });
+});
+
+describe('client revoke-role command', () => {
+  let program: Command;
+  let stderr: string;
+  let stderrSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    stderr = '';
+    stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
+      stderr += typeof chunk === 'string' ? chunk : String(chunk);
+      return true;
+    });
+    program = new Command();
+    program.exitOverride();
+    registerClientCommands(program);
+  });
+
+  afterEach(() => {
+    stderrSpy.mockRestore();
+  });
+
+  it('calls revokeRole and prints success', async () => {
+    mockApiClients.revokeRole.mockResolvedValueOnce({
+      apiClient: { id: 'client-1' },
+      changed: true,
+    });
+
+    await program.parseAsync(['node', 'ccam', 'client', 'revoke-role', 'client-1', 'account-admin']);
+
+    expect(mockApiClients.revokeRole).toHaveBeenCalledWith('client-1', 'account-admin');
+    expect(stderr).toMatch(/Revoked role account-admin from API client client-1/);
+  });
+
+  it('prints no-op stderr notice when changed=false', async () => {
+    mockApiClients.revokeRole.mockResolvedValueOnce({
+      apiClient: { id: 'client-1' },
+      changed: false,
+    });
+
+    await program.parseAsync(['node', 'ccam', 'client', 'revoke-role', 'client-1', 'account-admin']);
+
+    expect(stderr).toMatch(/API client client-1 does not have role account-admin.*no changes/);
   });
 });
