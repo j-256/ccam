@@ -16,9 +16,9 @@ A command-line interface built on `@ccam/sdk` that:
 src/
   commands/
     auth.ts         -- login (browser/client/password/manual), logout, list, show, use, rename, status, token
-    user.ts         -- user list, get, current, audit, roles, instances, assigned-realms, assigned-instances
+    user.ts         -- user list, get, current, audit, roles, instances, assigned-realms, assigned-instances, create, update, delete, reset, disable, revoke-verifier, grant-role, revoke-role
     org.ts          -- org list, get, realms, instances, audit
-    client.ts       -- client list, get, audit, assigned-realms, assigned-instances
+    client.ts       -- client list, get, audit, assigned-realms, assigned-instances, create, update, delete, set-password, set-auth-type, grant-role, revoke-role
     role.ts         -- role list, get, audit
     realm.ts        -- realm list, get
     instance.ts     -- instance list, get (with finders)

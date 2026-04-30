@@ -145,6 +145,8 @@ Matrix of SDK methods vs. roles. ✅ = allowed. The required permission for each
 | `users.auditLogs` | `READ_AUDIT_LOG_USER` | ✅ | ❌ | ✅ | ✅ |
 | `users.create` | `CREATE_USER` | ✅ | ❌ | ✅ | ❌ |
 | `users.update` | `WRITE_USER` | ✅ | ❌ | ✅ | ❌ |
+| `users.grantRole` | `WRITE_USER` | ✅ | ❌ | ✅ | ❌ |
+| `users.revokeRole` | `WRITE_USER` | ✅ | ❌ | ✅ | ❌ |
 | `users.delete` | `DELETE_USER` | ✅ | ❌ | ✅ | ❌ |
 | `users.disable` | `DISABLE_USER` | ✅ | ❌ | ✅ | ❌ |
 | `users.reset` | `RESET_USER` | ✅ | ❌ | ✅ | ❌ |
@@ -154,6 +156,8 @@ Matrix of SDK methods vs. roles. ✅ = allowed. The required permission for each
 | `apiClients.auditLogs` | `READ_AUDIT_LOG_APICLIENT` | ✅ | ✅ | ❌ | ✅ |
 | `apiClients.create` | `CREATE_APICLIENT` | ✅ | ✅ | ❌ | ❌ |
 | `apiClients.update` / `apiClients.setPassword` / `apiClients.setAuthType` | `WRITE_APICLIENT` | ✅ | ✅ | ❌ | ❌ |
+| `apiClients.grantRole` | `WRITE_APICLIENT` | ✅ | ✅ | ❌ | ❌ |
+| `apiClients.revokeRole` | `WRITE_APICLIENT` | ✅ | ✅ | ❌ | ❌ |
 | `apiClients.delete(id)` ¹ | `DELETE_APICLIENT` | ✅ | ✅ | ❌ | ❌ |
 | `organizations.list` / `organizations.get` / `organizations.search.*` | `READ_ORGANIZATION` | ✅ | ✅ | ✅ | ✅ |
 | `organizations.realms` / `organizations.instances` | `READ_ORGANIZATION` | ✅ | ✅ | ✅ | ✅ |

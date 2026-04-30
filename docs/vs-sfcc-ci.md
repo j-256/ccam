@@ -38,8 +38,8 @@ If you need to deploy cartridges or manage sandboxes, use sfcc-ci. It's the only
 | **Roles** | | |
 | List | `role:list` | `role list` |
 | Get | -- | `role get` |
-| Grant to user | `role:grant` | `user update --roles` |
-| Revoke from user | `role:revoke` | `user update --roles` |
+| Grant to user | `role:grant` | `user grant-role` / `user update --roles` |
+| Revoke from user | `role:revoke` | `user revoke-role` / `user update --roles` |
 | **Organizations** | | |
 | List / filter | `org:list` | `org list` (by name, starts-with, sf-account-id) |
 | Get | -- | `org get` |

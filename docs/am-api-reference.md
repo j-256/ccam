@@ -218,6 +218,14 @@ Multi-expand works with either comma syntax (`expand=organizations,roles`) or re
 
 **Warning:** Invalid expand values (e.g. `expand=bogus`) return HTTP 200 with an **empty response body** -- not a JSON error. Callers must validate expand values before sending.
 
+#### Role management (client-side)
+
+The AM API exposes no dedicated grant/revoke endpoints for roles. The `roles: string[]` field on `User` (and `ApiClient`) is the source of truth; to add or remove a role, the caller issues `PUT /users/{id}` (or `/apiclients/{id}`) with the full desired roles array. PUT is PATCH-semantics, so omitted fields are preserved.
+
+When a role is removed, the server automatically strips the corresponding entry from `roleTenantFilter`. Callers do not need to (and should not) send a cleaned-up filter string on revoke -- sending `{ roles: filtered }` alone is sufficient.
+
+The SDK's `users.grantRole` / `users.revokeRole` (and the api-clients equivalents) are convenience wrappers over this PUT flow with idempotency and a tenant-merge helper for `roleTenantFilter`.
+
 #### Sub-resources
 
 | Method | Path | Description |
@@ -364,6 +372,14 @@ Discovered via `/organizations/search`:
 | `GET /apiclients` (list) | Silently ignored | Silently ignored | Silently ignored |
 
 Same expand behavior as users: works on get, silently ignored on list.
+
+#### Role management (client-side)
+
+The AM API exposes no dedicated grant/revoke endpoints for roles. The `roles: string[]` field on `ApiClient` (and `User`) is the source of truth; to add or remove a role, the caller issues `PUT /apiclients/{id}` (or `/users/{id}`) with the full desired roles array. PUT is PATCH-semantics, so omitted fields are preserved.
+
+When a role is removed, the server automatically strips the corresponding entry from `roleTenantFilter`. Callers do not need to (and should not) send a cleaned-up filter string on revoke -- sending `{ roles: filtered }` alone is sufficient.
+
+The SDK's `apiClients.grantRole` / `apiClients.revokeRole` (and the users equivalents) are convenience wrappers over this PUT flow with idempotency and a tenant-merge helper for `roleTenantFilter`.
 
 #### Sub-resources
 

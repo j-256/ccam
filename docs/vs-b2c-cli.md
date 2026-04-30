@@ -49,8 +49,8 @@ If you need OCAPI, sandboxes, SLAS, MRT, or any non-AM Commerce Cloud surface, b
 | **Roles** | | |
 | List | `am roles list` (target-type filter) | `role list` (sort, fields) |
 | Get | `am roles get` | `role get` |
-| Grant to user | `am roles grant` (dedicated command) | `user update --roles` |
-| Revoke from user | `am roles revoke` (dedicated command) | `user update --roles` |
+| Grant to user | `am roles grant` (dedicated command) | `user grant-role` / `user update --roles` |
+| Revoke from user | `am roles revoke` (dedicated command) | `user revoke-role` / `user update --roles` |
 | Expand `serviceType` | -- | `role list --expand serviceType`, `role get --expand serviceType` |
 | **Organizations** | | |
 | List | `am orgs list` | `org list` |
@@ -110,7 +110,6 @@ If you need OCAPI, sandboxes, SLAS, MRT, or any non-AM Commerce Cloud surface, b
 ## What b2c-cli offers that ccam doesn't
 
 - **Every Commerce Cloud surface outside AM** -- OCAPI, Sandbox, SLAS, MRT, SCAPI schemas (see Scope table above)
-- **Dedicated `am roles grant` / `am roles revoke`** -- ccam models role assignment as a field on the user (`user update --roles`), matching the underlying PATCH
 - **Ecosystem integrations** -- MCP server, VS Code extension, GitHub Action workflow templates, plugin marketplace presence, agent skills
 
 ## How to decide

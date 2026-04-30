@@ -22,10 +22,10 @@ src/
     index.ts       -- public auth exports
   
   resources/
-    users.ts                       -- UsersResource (list/get/getByLogin/current, search finders, audit, sub-resources, create/update/delete/reset/disable/revokeVerifier)
+    users.ts                       -- UsersResource (list/get/getByLogin/current, search finders, audit, sub-resources, create/update/delete/reset/disable/revokeVerifier, grantRole/revokeRole)
     organizations.ts               -- OrganizationsResource
     organization-configuration.ts  -- OrganizationConfigurationResource
-    api-clients.ts                 -- ApiClientsResource
+    api-clients.ts                 -- ApiClientsResource (list/get, audit, sub-resources, create/update/delete, setPassword, setAuthType, grantRole/revokeRole)
     roles.ts                       -- RolesResource
     realms.ts                      -- RealmsResource
     instances.ts                   -- InstancesResource
