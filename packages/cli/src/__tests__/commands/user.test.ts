@@ -556,6 +556,23 @@ describe('user grant-role command', () => {
 
     expect(stderr).not.toMatch(/inert until tenants are set/);
   });
+
+  it('warns when --tenants is an empty string for non-GLOBAL role', async () => {
+    mockUsers.getByLogin.mockResolvedValueOnce({ id: 'user-123' });
+    mockUsers.grantRole.mockResolvedValueOnce({
+      user: { id: 'user-123', roles: ['ccdx-sbx-user'] },
+      changed: true,
+      roleScope: 'INSTANCE',
+    });
+
+    await program.parseAsync([
+      'node', 'ccam', 'user', 'grant-role',
+      'alice@example.com', 'ccdx-sbx-user',
+      '--tenants', '',
+    ]);
+
+    expect(stderr).toMatch(/scope INSTANCE.*inert until tenants are set/);
+  });
 });
 
 describe('user revoke-role command', () => {

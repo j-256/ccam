@@ -526,7 +526,7 @@ async function grantUserRole(
       process.stderr.write(`User ${subject} already has role ${roleId} (no changes)\n`);
     }
 
-    if (result.roleScope !== 'GLOBAL' && tenants === undefined) {
+    if (result.roleScope !== 'GLOBAL' && (tenants === undefined || tenants.length === 0)) {
       process.stderr.write(
         `Warning: role ${roleId} has scope ${result.roleScope}; it will be inert until tenants are set\n`
       );
