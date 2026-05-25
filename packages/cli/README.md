@@ -1,37 +1,35 @@
-# ccam
+# @j-256/ccam
 
-TypeScript CLI and SDK for the Salesforce Commerce Cloud Account Manager REST API.
+Command-line tool for the Salesforce Commerce Cloud Account Manager REST API.
 
-The AM API is largely undocumented. **ccam** serves as both a practical tool and a reference implementation for developers working with Commerce Cloud account management.
+The AM API is largely undocumented. **ccam** gives Account Manager administrators a tool that covers every resource, every subresource, and every finder -- exportable to CSV/TSV/YAML/JSON for audits, automation, and integrations.
 
-## Why ccam?
+Built for:
 
-ccam is built for people who administer Account Manager: security and compliance teams running access audits, team leads onboarding and offboarding users, and developers integrating AM into their own tooling.
+- **Security and compliance** -- access audits, "who has access to what", "what changed in the last 30 days", exportable reports
+- **Team leads** -- onboarding/offboarding, bulk role assignment, org membership management
+- **Developers and ops** -- troubleshooting login issues, checking client configuration, verifying role scopes
 
-- **Complete AM coverage.** Users, organizations, API clients, roles, realms, permissions, service types, org configurations, instances -- every resource, every subresource, every finder.
-- **Exportable.** CSV, TSV, YAML, JSON, or table. `ccam user list --org <id> --format csv` produces a spreadsheet-ready roster.
-- **Typed SDK.** `ccam-sdk` is a first-class, documented TypeScript library with TSDoc on every method, typed sort enums, and a structured error taxonomy.
-- **Named auth profiles.** Switch between orgs or accounts without re-authenticating. Refresh tokens are stored at `~/.config/ccam/credentials` with 0600 permissions.
-- **Interactive TUI.** Run `ccam` with no arguments for a keyboard-driven resource browser with drill-down from user to orgs to realms.
+Highlights:
 
-Comparisons with the other Commerce Cloud CLIs:
+- **Complete AM coverage.** Users, organizations, API clients, roles, realms, permissions, service types, org configurations, instances.
+- **Exportable.** CSV, TSV, YAML, JSON, or a human-readable table. `ccam user list --org <id> --format csv` produces a spreadsheet-ready roster.
+- **Named auth profiles.** Switch between orgs or accounts without re-authenticating. Refresh tokens stored at `~/.config/ccam/credentials` with 0600 permissions.
+- **Interactive TUI.** Run `ccam` with no arguments for a keyboard-driven resource browser.
 
-- [b2c-cli](https://github.com/SalesforceCommerceCloud/b2c-developer-tooling) is Salesforce's official CLI (GA, supersedes sfcc-ci). Broad Commerce Cloud coverage (OCAPI, sandboxes, SLAS, MRT), basic AM commands. See [docs/vs-b2c-cli.md](docs/vs-b2c-cli.md).
-- [sfcc-ci](https://github.com/SalesforceCommerceCloud/sfcc-ci) is the long-standing community CLI for CI/CD. Minimal AM coverage. See [docs/vs-sfcc-ci.md](docs/vs-sfcc-ci.md).
+For programmatic use, see [`ccam-sdk`](https://www.npmjs.com/package/ccam-sdk) -- the typed TypeScript library that powers this CLI.
 
-ccam fills the AM-administration gap both leave open.
-
-## Quick Start: CLI
-
-### Installation
+## Installation
 
 ```bash
 npm install -g @j-256/ccam
 ```
 
-### First run
+The install adds a `ccam` binary to your PATH. Requires Node.js 22 or later.
 
-ccam talks to Account Manager over OAuth2, so you need an AM API client before you can log in. If you already use sfcc-ci or other Commerce Cloud tooling, you can reuse that client; otherwise see [`docs/getting-started.md`](docs/getting-started.md) for a step-by-step walkthrough of creating one.
+## First run
+
+ccam talks to Account Manager over OAuth2, so you need an AM API client before you can log in. If you already use sfcc-ci or other Commerce Cloud tooling, you can reuse that client; otherwise see [the getting-started guide](https://github.com/j-256/ccam/blob/main/docs/getting-started.md) for a step-by-step walkthrough.
 
 Once you have a client ID (and secret, for confidential clients):
 
@@ -48,9 +46,9 @@ Non-interactive alternatives:
 - `ccam auth login --manual` -- browser flow without a loopback server (for SSH/headless)
 - Set environment variables instead -- see below
 
-### Authentication
+## Environment variables
 
-Set environment variables for your API client credentials:
+For non-profile-based auth, set:
 
 ```bash
 export CCAM_CLIENT_ID="your-client-id"
@@ -58,25 +56,27 @@ export CCAM_CLIENT_SECRET="your-client-secret"
 export CCAM_HOST="https://account.demandware.com"  # optional, this is the default
 ```
 
-For user-context operations (e.g. `client.users.current()` in the SDK), also set:
+For user-context operations (e.g. `ccam user current`):
 
 ```bash
 export CCAM_USER="your-email@example.com"
 export CCAM_USER_PASSWORD="your-password"
 ```
 
-### Example Commands
+Resolution order: CLI flags > env vars > active profile > defaults.
+
+## Example commands
 
 List users:
 ```bash
 ccam user list
 ```
 
-List users with filters:
+Filter users:
 ```bash
 ccam user list --org abc123 --role def456
 ccam user list --login user@example.com
-ccam user list --org-type customer
+ccam user list --org-realm-access abc123
 ```
 
 Filter organizations:
@@ -86,74 +86,12 @@ ccam org list --starts-with "Acme"
 ccam org list --sf-account-id "001..."
 ```
 
-List roles:
-```bash
-ccam role list
-```
-
 Export to CSV:
 ```bash
 ccam user list --org abc123 --format csv > users.csv
 ```
 
-## Quick Start: SDK
-
-### Installation
-
-```bash
-npm install ccam-sdk
-```
-
-### Usage
-
-```typescript
-import { CcamClient } from 'ccam-sdk';
-
-// Create client (uses environment variables or explicit options)
-const client = new CcamClient({
-  clientId: 'your-client-id',
-  clientSecret: 'your-client-secret',
-  host: 'https://account.demandware.com' // optional
-});
-
-// List users with pagination
-const result = await client.users.list({
-  page: 0,
-  size: 25
-});
-
-console.log(result.content);
-console.log(`Page ${result.page.number + 1} of ${result.page.totalPages}`);
-
-// Get user by login with expanded organizations
-const user = await client.users.getByLogin('user@example.com', {
-  expand: 'organizations'
-});
-
-console.log(user.mail, user.organizations);
-
-// List roles with sorting
-const roles = await client.roles.list({
-  page: 0,
-  size: 50,
-  sort: { field: 'name', direction: 'asc' }
-});
-```
-
-## Authentication
-
-ccam supports three credential sources (first wins):
-
-1. **Explicit options** passed to `CcamClient` constructor
-2. **Environment variables**: `CCAM_CLIENT_ID`, `CCAM_CLIENT_SECRET`, `CCAM_USER`, `CCAM_USER_PASSWORD`, `CCAM_HOST`
-3. **Default host**: `https://account.demandware.com`
-
-Two authentication modes:
-
-- **Client-only** (system context): read all resources, most common mode
-- **Client + user** (user context): required for the `/users/current` endpoint
-
-## Output Formats
+## Output formats
 
 | Format | Use case | CLI flag |
 |--------|----------|----------|
@@ -163,35 +101,36 @@ Two authentication modes:
 | `tsv` | Tab-separated (better for whitespace) | `--format tsv` |
 | `yaml` | Config files, human-readable structured | `--format yaml` |
 
-When output is piped (not a TTY), JSON is the default format.
+When output is piped (not a TTY), JSON is the default.
 
 ## Resources
 
-| Resource | CLI command | SDK property |
-|----------|-------------|--------------|
-| Users | `ccam user` | `client.users` |
-| Organizations | `ccam org` | `client.organizations` |
-| API Clients | `ccam client` | `client.apiClients` |
-| Roles | `ccam role` | `client.roles` |
-| Realms | `ccam realm` | `client.realms` |
-| Permissions | `ccam permission` | `client.permissions` |
-| Service Types | `ccam service-type` | `client.serviceTypes` |
+| Resource | Command |
+|----------|---------|
+| Users | `ccam user` |
+| Organizations | `ccam org` |
+| API Clients | `ccam client` |
+| Roles | `ccam role` |
+| Realms | `ccam realm` |
+| Permissions | `ccam permission` |
+| Service Types | `ccam service-type` |
+| Instances | `ccam instance` |
+| Org Configurations | `ccam org-config` |
 
-Most resources support:
-- `list` -- paginated list of resources
-- `get <id>` -- get a single resource by ID
+Most resources support `list` (paginated) and `get <id>`.
 
 Additional commands:
-- Users: `get` by login (default) or by ID (`--id`), `current`, `audit`, `roles`, `instances`, `assigned-realms`, `assigned-instances`, `create`, `update`, `delete`, `reset`, `disable`, `revoke-verifier`. Filter flags on `list` (see below).
-- Organizations: `realms`, `instances`, `audit`, `update`. Filter flags on `list` (`--name`, `--starts-with`, `--sf-account-id`).
-- API Clients: `audit`, `assigned-realms`, `assigned-instances`, `create`, `update`, `delete`, `set-password`, `set-auth-type`.
-- Instances: `validate-filter`.
 
-Users and API Clients support `--expand` on `get` to include related resources (`organizations`, `roles`, or `organizations,roles`). Roles and Org Realms support `--expand serviceType` / `--expand instance` respectively.
+- **Users**: `get` by login (default) or by ID (`--id`), `current`, `audit`, `roles`, `instances`, `assigned-realms`, `assigned-instances`, `create`, `update`, `delete`, `reset`, `disable`, `revoke-verifier`, `grant-role`, `revoke-role`.
+- **Organizations**: `realms`, `instances`, `audit`, `update`.
+- **API Clients**: `audit`, `assigned-realms`, `assigned-instances`, `create`, `update`, `delete`, `set-password`, `set-auth-type`, `grant-role`, `revoke-role`.
+- **Instances**: `validate-filter`.
 
-## User Search Filters
+Users and API Clients support `--expand` on `get` to include related resources (`organizations`, `roles`, or `organizations,roles`). Roles and Org Realms support `--expand serviceType` and `--expand instance` respectively.
 
-The `ccam user list` command maps filter flags to AM API finder methods:
+## User search filters
+
+`ccam user list` maps filter flags to AM API finder methods:
 
 | Flag | API finder | Example |
 |------|------------|---------|
@@ -203,6 +142,11 @@ The `ccam user list` command maps filter flags to AM API finder methods:
 | `--org-realm-access <id>` | `findByOrgRealmAccess` | `ccam user list --org-realm-access abc123` |
 
 Add `--modified-after <date>` with `--role` to filter by modification date.
+
+## Source and issues
+
+- Source: <https://github.com/j-256/ccam>
+- Issues: <https://github.com/j-256/ccam/issues>
 
 ## License
 

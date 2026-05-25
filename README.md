@@ -76,7 +76,7 @@ List users with filters:
 ```bash
 ccam user list --org abc123 --role def456
 ccam user list --login user@example.com
-ccam user list --org-type customer
+ccam user list --org-realm-access abc123
 ```
 
 Filter organizations:
