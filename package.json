@@ -14,7 +14,6 @@
     "test": "npm run test --workspaces",
     "lint": "eslint packages/*/src",
     "format": "prettier --write 'packages/*/src/**/*.ts'",
-    "release": "node scripts/release.js",
     "test:integration": "npm run test:integration -w packages/sdk",
     "preversion": "scripts/preversion.sh",
     "version": "node scripts/version-sync.mjs",

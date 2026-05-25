@@ -8,6 +8,5 @@ coverage/
 .env
 .env.integration.*
 .npmrc
-release/
 .worktrees/
 docs/internal/
