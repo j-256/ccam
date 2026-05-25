@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: [v*]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -11,6 +12,10 @@ on:
         description: "Why are you running this?"
         required: false
         type: string
+      dry_run:
+        description: "Dry run (skip actual npm publish, only used by the publish job)"
+        type: boolean
+        default: true
 
 jobs:
   lint:
@@ -106,3 +111,110 @@ jobs:
         run: |
           printf '\n**ccam (CLI) tests**\n\n' >> "$GITHUB_STEP_SUMMARY"
           npm test -w packages/cli
+
+  publish:
+    needs: [lint, build, test]
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Resolve mode
+        id: mode
+        env:
+          REF: ${{ github.ref }}
+          DISPATCH_DRY_RUN: ${{ inputs.dry_run }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "dry_run=$DISPATCH_DRY_RUN" >> "$GITHUB_OUTPUT"
+            echo "**Trigger:** workflow_dispatch (dry_run=$DISPATCH_DRY_RUN)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "dry_run=false" >> "$GITHUB_OUTPUT"
+            echo "**Trigger:** tag push ($REF)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Verify tag is on main
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          if ! git branch -r --contains "$GITHUB_SHA" | grep -q 'origin/main'; then
+            echo "Error: tag $GITHUB_REF_NAME is not on the main branch" >&2
+            exit 1
+          fi
+
+      - name: Verify tag matches package versions
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="$GITHUB_REF_NAME"
+          for pkg in package.json packages/sdk/package.json packages/cli/package.json; do
+            VERSION="v$(node -p "require('./$pkg').version")"
+            if [ "$VERSION" != "$TAG" ]; then
+              echo "Error: $pkg is $VERSION but tag is $TAG" >&2
+              exit 1
+            fi
+          done
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Pack (always, for inspection)
+        run: |
+          mkdir -p artifacts
+          npm pack -w packages/sdk --pack-destination artifacts
+          npm pack -w packages/cli --pack-destination artifacts
+          ls -la artifacts/
+          {
+            printf '\n**Tarball contents**\n\n'
+            for tgz in artifacts/*.tgz; do
+              echo "### $(basename "$tgz")"
+              echo '```'
+              tar tzf "$tgz" | sort
+              echo '```'
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tarballs
+          path: artifacts/*.tgz
+
+      - name: Publish @ccam/sdk
+        if: steps.mode.outputs.dry_run != 'true'
+        run: npm publish -w packages/sdk --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish ccam
+        if: steps.mode.outputs.dry_run != 'true'
+        run: npm publish -w packages/cli --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/v') && steps.mode.outputs.dry_run != 'true'
+        run: |
+          gh release create "$GITHUB_REF_NAME" artifacts/*.tgz \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes ||
+          gh release upload "$GITHUB_REF_NAME" artifacts/*.tgz --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dry-run summary
+        if: steps.mode.outputs.dry_run == 'true'
+        run: |
+          {
+            echo
+            echo '**Dry run complete.** No npm publish, no GitHub release.'
+            echo 'Tarballs are uploaded as the `tarballs` artifact for inspection.'
+          } >> "$GITHUB_STEP_SUMMARY"
