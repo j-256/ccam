@@ -1,8 +1,8 @@
-# @ccam/sdk
+# ccam-sdk
 
 Typed TypeScript SDK for the [Salesforce Commerce Cloud Account Manager](https://account.demandware.com) REST API.
 
-The AM API is largely undocumented. `@ccam/sdk` is a first-class, documented TypeScript library covering every AM resource: users, organizations, API clients, roles, realms, permissions, service types, org configurations, and instances. It powers the [`ccam`](https://www.npmjs.com/package/ccam) CLI but is also designed for direct use in your own tooling.
+The AM API is largely undocumented. `ccam-sdk` is a first-class, documented TypeScript library covering every AM resource: users, organizations, API clients, roles, realms, permissions, service types, org configurations, and instances. It powers the [`@j-256/ccam`](https://www.npmjs.com/package/@j-256/ccam) CLI but is also designed for direct use in your own tooling.
 
 - TSDoc on every method
 - Typed sort enums (no stringly-typed `sort` params)
@@ -13,7 +13,7 @@ The AM API is largely undocumented. `@ccam/sdk` is a first-class, documented Typ
 ## Installation
 
 ```bash
-npm install @ccam/sdk
+npm install ccam-sdk
 ```
 
 Requires Node.js 22 or later.
@@ -21,7 +21,7 @@ Requires Node.js 22 or later.
 ## Usage
 
 ```typescript
-import { CcamClient } from '@ccam/sdk';
+import { CcamClient } from 'ccam-sdk';
 
 const client = new CcamClient({
   clientId: 'your-client-id',
@@ -69,10 +69,10 @@ Most resources support paginated `list`, `get(id)`, and resource-specific finder
 
 ## CLI
 
-If you want a command-line tool instead of (or in addition to) the SDK, install [`ccam`](https://www.npmjs.com/package/ccam):
+If you want a command-line tool instead of (or in addition to) the SDK, install [`@j-256/ccam`](https://www.npmjs.com/package/@j-256/ccam):
 
 ```bash
-npm install -g ccam
+npm install -g @j-256/ccam
 ccam user list --org abc123 --format csv > users.csv
 ```
 

@@ -1,5 +1,5 @@
-import { OrganizationSortField } from '@ccam/sdk';
-import type { CcamClient, ContentResponse, PagedResponse } from '@ccam/sdk';
+import { OrganizationSortField } from 'ccam-sdk';
+import type { CcamClient, ContentResponse, PagedResponse } from 'ccam-sdk';
 import type { ResourceConfig } from '../types.js';
 import { formatBoolean, formatDate, formatArray, formatCount, formatUserState } from '../format.js';
 

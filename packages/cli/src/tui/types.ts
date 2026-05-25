@@ -1,4 +1,4 @@
-import type { CcamClient, ContentResponse, PagedResponse } from '@ccam/sdk';
+import type { CcamClient, ContentResponse, PagedResponse } from 'ccam-sdk';
 
 // ---------------------------------------------------------------------------
 // ViewType -- every navigable screen in the TUI

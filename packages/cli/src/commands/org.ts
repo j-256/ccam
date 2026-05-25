@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { CcamNotFoundError } from '@ccam/sdk';
+import { CcamNotFoundError } from 'ccam-sdk';
 import { addGlobalOptions, parseExpand, resolveGlobalOptions, writePageInfoIfTable, type GlobalOptions } from '../shared.js';
 import { resolveProfile } from '../auth/profile-resolver.js';
 import { createClientFromResolved } from '../client-factory.js';

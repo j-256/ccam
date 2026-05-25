@@ -1,4 +1,4 @@
-import type { CcamClient, ContentResponse } from '@ccam/sdk';
+import type { CcamClient, ContentResponse } from 'ccam-sdk';
 import type { ResourceConfig } from '../types.js';
 import { formatArray } from '../format.js';
 

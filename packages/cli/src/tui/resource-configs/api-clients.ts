@@ -1,5 +1,5 @@
-import { ApiClientSortField } from '@ccam/sdk';
-import type { CcamClient, ContentResponse, PagedResponse } from '@ccam/sdk';
+import { ApiClientSortField } from 'ccam-sdk';
+import type { CcamClient, ContentResponse, PagedResponse } from 'ccam-sdk';
 import type { ResourceConfig } from '../types.js';
 import { formatBoolean, formatDate, formatArray } from '../format.js';
 

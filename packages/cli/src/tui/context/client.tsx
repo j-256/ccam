@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { CcamClient } from '@ccam/sdk';
+import type { CcamClient } from 'ccam-sdk';
 
 const ClientContext = createContext<CcamClient | null>(null);
 

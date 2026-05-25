@@ -1,5 +1,5 @@
-import { UserSortField } from '@ccam/sdk';
-import type { CcamClient, ContentResponse, PagedResponse } from '@ccam/sdk';
+import { UserSortField } from 'ccam-sdk';
+import type { CcamClient, ContentResponse, PagedResponse } from 'ccam-sdk';
 import type { ResourceConfig } from '../types.js';
 import { formatUserState, formatDate, formatBoolean, formatArray } from '../format.js';
 

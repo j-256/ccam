@@ -7,7 +7,7 @@ import { NavigationProvider, useNav } from '../../../tui/context/navigation.js';
 import { TerminalSizeProvider } from '../../../tui/context/terminal-size.js';
 import type { ResourceConfig, ViewEntry } from '../../../tui/types.js';
 import { createMockClient, mockPagedResponse, delay } from '../helpers.js';
-import type { ContentResponse } from '@ccam/sdk';
+import type { ContentResponse } from 'ccam-sdk';
 
 const home: ViewEntry = { view: 'resource-picker', label: 'Home' };
 

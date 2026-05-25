@@ -10,7 +10,7 @@ ccam is built for people who administer Account Manager: security and compliance
 
 - **Complete AM coverage.** Users, organizations, API clients, roles, realms, permissions, service types, org configurations, instances -- every resource, every subresource, every finder.
 - **Exportable.** CSV, TSV, YAML, JSON, or table. `ccam user list --org <id> --format csv` produces a spreadsheet-ready roster.
-- **Typed SDK.** `@ccam/sdk` is a first-class, documented TypeScript library with TSDoc on every method, typed sort enums, and a structured error taxonomy.
+- **Typed SDK.** `ccam-sdk` is a first-class, documented TypeScript library with TSDoc on every method, typed sort enums, and a structured error taxonomy.
 - **Named auth profiles.** Switch between orgs or accounts without re-authenticating. Refresh tokens are stored at `~/.config/ccam/credentials` with 0600 permissions.
 - **Interactive TUI.** Run `ccam` with no arguments for a keyboard-driven resource browser with drill-down from user to orgs to realms.
 
@@ -26,7 +26,7 @@ ccam fills the AM-administration gap both leave open.
 ### Installation
 
 ```bash
-npm install -g ccam
+npm install -g @j-256/ccam
 ```
 
 ### First run
@@ -101,13 +101,13 @@ ccam user list --org abc123 --format csv > users.csv
 ### Installation
 
 ```bash
-npm install @ccam/sdk
+npm install ccam-sdk
 ```
 
 ### Usage
 
 ```typescript
-import { CcamClient } from '@ccam/sdk';
+import { CcamClient } from 'ccam-sdk';
 
 // Create client (uses environment variables or explicit options)
 const client = new CcamClient({

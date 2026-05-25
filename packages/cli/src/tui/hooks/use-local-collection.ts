@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { ContentResponse } from '@ccam/sdk';
+import type { ContentResponse } from 'ccam-sdk';
 
 interface LocalCollectionState<T> {
   data: T[];

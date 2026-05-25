@@ -76,7 +76,7 @@ A few things are worth calling out in both directions:
 |---|---|---|
 | Language | JavaScript (CommonJS, callbacks) | TypeScript (ESM, Promises) |
 | HTTP client | `request` (deprecated 2020) | `fetch` |
-| Public SDK | `module.exports.api` (undocumented) | `@ccam/sdk` with TSDoc on every method |
+| Public SDK | `module.exports.api` (undocumented) | `ccam-sdk` with TSDoc on every method |
 | Auth profiles | Single session in `~/.sfcc-ci/`, plus `dw.json` in cwd | Named profiles with active-profile pointer (`~/.config/ccam/profiles.yaml`) |
 | Credential storage | JSON at `~/.sfcc-ci/token.json` | `~/.config/ccam/credentials` (0600, refresh tokens only) |
 | OAuth grants | `password`, `client_credentials`, `authorization_code` | `password`, `client_credentials`, `authorization_code` with PKCE, `refresh_token` |

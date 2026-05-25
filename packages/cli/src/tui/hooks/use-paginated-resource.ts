@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { ContentResponse, PagedResponse } from '@ccam/sdk';
+import type { ContentResponse, PagedResponse } from 'ccam-sdk';
 import type { SortFieldDef } from '../types.js';
 
 export interface SortState {

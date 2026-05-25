@@ -1,4 +1,4 @@
-import { CcamClient, TokenManager } from '@ccam/sdk';
+import { CcamClient, TokenManager } from 'ccam-sdk';
 import type { ResolvedProfile } from './auth/profile-resolver.js';
 import { ProfileStore } from './auth/profile-store.js';
 

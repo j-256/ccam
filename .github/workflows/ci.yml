@@ -32,9 +32,9 @@ jobs:
           REASON: ${{ inputs.reason }}
         run: echo "**Triggered manually:** $REASON" >> "$GITHUB_STEP_SUMMARY"
       - run: npm ci
-      - name: Lint @ccam/sdk
+      - name: Lint ccam-sdk
         run: |
-          printf '\n**@ccam/sdk lint**\n\n' >> "$GITHUB_STEP_SUMMARY"
+          printf '\n**ccam-sdk lint**\n\n' >> "$GITHUB_STEP_SUMMARY"
           npx eslint packages/sdk/src 2>&1 | tee eslint-sdk.log
           status=${PIPESTATUS[0]}
           if [ "$status" -eq 0 ]; then
@@ -77,9 +77,9 @@ jobs:
           REASON: ${{ inputs.reason }}
         run: echo "**Triggered manually:** $REASON" >> "$GITHUB_STEP_SUMMARY"
       - run: npm ci
-      - name: Build @ccam/sdk
+      - name: Build ccam-sdk
         run: |
-          printf '\n**@ccam/sdk build**\n\n' >> "$GITHUB_STEP_SUMMARY"
+          printf '\n**ccam-sdk build**\n\n' >> "$GITHUB_STEP_SUMMARY"
           npm run build -w packages/sdk
           echo '✅ tsc succeeded' >> "$GITHUB_STEP_SUMMARY"
       - name: Build ccam
@@ -103,9 +103,9 @@ jobs:
         run: echo "**Triggered manually:** $REASON" >> "$GITHUB_STEP_SUMMARY"
       - run: npm ci
       - run: npm run build -w packages/sdk
-      - name: Test @ccam/sdk
+      - name: Test ccam-sdk
         run: |
-          printf '\n**@ccam/sdk tests**\n\n' >> "$GITHUB_STEP_SUMMARY"
+          printf '\n**ccam-sdk tests**\n\n' >> "$GITHUB_STEP_SUMMARY"
           npm test -w packages/sdk
       - name: Test ccam
         run: |
@@ -188,9 +188,9 @@ jobs:
           name: tarballs
           path: artifacts/*.tgz
 
-      - name: Publish @ccam/sdk
+      - name: Publish ccam-sdk
         if: steps.mode.outputs.dry_run != 'true'
-        run: npm publish -w packages/sdk --provenance --access public
+        run: npm publish -w packages/sdk --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { CcamClient, PagedResponse } from '@ccam/sdk';
+import type { CcamClient, PagedResponse } from 'ccam-sdk';
 
 export function createMockClient(): CcamClient {
   return {

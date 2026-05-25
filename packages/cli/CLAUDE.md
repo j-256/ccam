@@ -4,7 +4,7 @@ CLI for the Salesforce Commerce Cloud Account Manager REST API.
 
 ## What this is
 
-A command-line interface built on `@ccam/sdk` that:
+A command-line interface built on `ccam-sdk` that:
 - Exposes all AM API resources as CLI commands
 - Supports multiple output formats (table, JSON, CSV, TSV, YAML)
 - Provides pagination and field filtering

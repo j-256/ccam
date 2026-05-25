@@ -4,7 +4,7 @@ import { Text } from 'ink';
 import { usePaginatedResource } from '../../../tui/hooks/use-paginated-resource.js';
 import type { SortState } from '../../../tui/hooks/use-paginated-resource.js';
 import { mockPagedResponse, delay } from '../helpers.js';
-import type { PagedResponse } from '@ccam/sdk';
+import type { PagedResponse } from 'ccam-sdk';
 import type { SortFieldDef } from '../../../tui/types.js';
 
 function Harness<T>({

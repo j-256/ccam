@@ -10,7 +10,7 @@ import { SubResourceTab } from '../components/SubResourceTab.js';
 import { AuditTab } from '../components/AuditTab.js';
 import { FooterBar } from '../components/FooterBar.js';
 import type { AuditTabConfig, ResourceConfig, TabConfig } from '../types.js';
-import type { AuditLogRecord, ContentResponse } from '@ccam/sdk';
+import type { AuditLogRecord, ContentResponse } from 'ccam-sdk';
 
 export interface ResourceDetailViewProps {
   config: ResourceConfig;

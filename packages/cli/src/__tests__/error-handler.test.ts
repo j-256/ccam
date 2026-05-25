@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { handleError } from '../error-handler.js';
-import { CcamError, CcamAuthError, CcamNotFoundError } from '@ccam/sdk';
+import { CcamError, CcamAuthError, CcamNotFoundError } from 'ccam-sdk';
 
 describe('handleError', () => {
   let stderrSpy: ReturnType<typeof vi.spyOn>;

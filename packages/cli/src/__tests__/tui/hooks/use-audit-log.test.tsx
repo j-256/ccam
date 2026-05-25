@@ -3,7 +3,7 @@ import { render } from 'ink-testing-library';
 import { Text } from 'ink';
 import { useAuditLog } from '../../../tui/hooks/use-audit-log.js';
 import { delay } from '../helpers.js';
-import type { ContentResponse, AuditLogRecord } from '@ccam/sdk';
+import type { ContentResponse, AuditLogRecord } from 'ccam-sdk';
 
 function mockAuditResponse(count: number): ContentResponse<AuditLogRecord> {
   const content: AuditLogRecord[] = Array.from({ length: count }, (_, i) => ({

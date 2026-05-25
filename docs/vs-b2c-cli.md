@@ -82,7 +82,7 @@ If you need OCAPI, sandboxes, SLAS, MRT, or any non-AM Commerce Cloud surface, b
 |---|---|---|
 | Language | TypeScript (ESM) | TypeScript (ESM) |
 | CLI framework | oclif | Commander.js |
-| SDK | `@salesforce/b2c-tooling-sdk`, generated from OpenAPI specs | `@ccam/sdk`, hand-written with TSDoc |
+| SDK | `@salesforce/b2c-tooling-sdk`, generated from OpenAPI specs | `ccam-sdk`, hand-written with TSDoc |
 | Auth storage | Single stateful session (shared with sfcc-ci) | Named profiles (`~/.config/ccam/profiles.yaml` + 0600 credentials file) |
 | OAuth grants | Implicit (for browser), client_credentials, password | authorization_code + PKCE, client_credentials, password, refresh_token |
 | Output formats | JSON, table | JSON, CSV, TSV, YAML, table |

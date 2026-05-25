@@ -1,5 +1,5 @@
-import { RoleSortField } from '@ccam/sdk';
-import type { CcamClient, PagedResponse } from '@ccam/sdk';
+import { RoleSortField } from 'ccam-sdk';
+import type { CcamClient, PagedResponse } from 'ccam-sdk';
 import type { ResourceConfig } from '../types.js';
 import { formatBoolean, formatArray, formatUserState } from '../format.js';
 

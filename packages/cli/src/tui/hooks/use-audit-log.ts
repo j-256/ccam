@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { ContentResponse, AuditLogRecord } from '@ccam/sdk';
+import type { ContentResponse, AuditLogRecord } from 'ccam-sdk';
 
 const QUERY_SIZE_STEPS = [25, 50, 100] as const;
 

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from 'ink-testing-library';
 import { AuditTab } from '../../../tui/components/AuditTab.js';
 import { TerminalSizeProvider } from '../../../tui/context/terminal-size.js';
-import type { ContentResponse, AuditLogRecord } from '@ccam/sdk';
+import type { ContentResponse, AuditLogRecord } from 'ccam-sdk';
 import { delay } from '../helpers.js';
 
 let originalColumns: number | undefined;

@@ -5,7 +5,7 @@ TypeScript CLI and SDK for the Salesforce Commerce Cloud Account Manager REST AP
 ## Architecture
 
 Monorepo with two packages:
-- `@ccam/sdk` -- typed API wrapper for the AM REST API
+- `ccam-sdk` -- typed API wrapper for the AM REST API
 - `ccam` -- CLI binary built on the SDK
 
 Built with:

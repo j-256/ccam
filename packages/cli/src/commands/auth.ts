@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { TokenManager, createPkcePair, buildAuthorizeUrl, generateState, exchangeAuthorizationCode, CcamOAuthError } from '@ccam/sdk';
+import { TokenManager, createPkcePair, buildAuthorizeUrl, generateState, exchangeAuthorizationCode, CcamOAuthError } from 'ccam-sdk';
 import chalk from 'chalk';
 import YAML from 'yaml';
 import { resolveProfile } from '../auth/profile-resolver.js';

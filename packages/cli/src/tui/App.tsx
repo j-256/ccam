@@ -1,5 +1,5 @@
 import { useApp, useInput } from 'ink';
-import type { CcamClient } from '@ccam/sdk';
+import type { CcamClient } from 'ccam-sdk';
 import { ClientProvider } from './context/client.js';
 import { TerminalSizeProvider } from './context/terminal-size.js';
 import { NavigationProvider, useNav } from './context/navigation.js';

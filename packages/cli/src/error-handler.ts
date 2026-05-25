@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { CcamError, CcamAuthError, CcamNotFoundError } from '@ccam/sdk';
+import { CcamError, CcamAuthError, CcamNotFoundError } from 'ccam-sdk';
 
 export function handleError(err: unknown): never {
   if (err instanceof CcamAuthError) {

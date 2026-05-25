@@ -5,7 +5,7 @@ This walks you from a fresh install to running your first command.
 ## 1. Install
 
 ```bash
-npm install -g ccam
+npm install -g @j-256/ccam
 ```
 
 Check it's on your path:

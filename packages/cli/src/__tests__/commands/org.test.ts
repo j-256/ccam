@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Command } from 'commander';
-import { CcamNotFoundError } from '@ccam/sdk';
+import { CcamNotFoundError } from 'ccam-sdk';
 import { selectOrgFinder, registerOrgCommands } from '../../commands/org.js';
 
 // Mock dependencies

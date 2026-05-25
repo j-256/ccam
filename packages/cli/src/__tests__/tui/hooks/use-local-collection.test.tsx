@@ -3,7 +3,7 @@ import { render } from 'ink-testing-library';
 import { Text } from 'ink';
 import { useLocalCollection } from '../../../tui/hooks/use-local-collection.js';
 import { delay } from '../helpers.js';
-import type { ContentResponse } from '@ccam/sdk';
+import type { ContentResponse } from 'ccam-sdk';
 
 function mockContentResponse<T>(content: T[]): ContentResponse<T> {
   return { content, links: [] };

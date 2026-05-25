@@ -7,7 +7,7 @@ import { useTerminalSize } from '../context/terminal-size.js';
 import { Table } from './Table.js';
 import { HintText } from './FooterBar.js';
 import type { ColumnDef } from '../types.js';
-import type { AuditLogRecord, ContentResponse } from '@ccam/sdk';
+import type { AuditLogRecord, ContentResponse } from 'ccam-sdk';
 
 const BORDER_INSET = 2;
 

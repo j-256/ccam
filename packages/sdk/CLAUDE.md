@@ -1,4 +1,4 @@
-# @ccam/sdk
+# ccam-sdk
 
 Typed TypeScript SDK for the Salesforce Commerce Cloud Account Manager REST API.
 

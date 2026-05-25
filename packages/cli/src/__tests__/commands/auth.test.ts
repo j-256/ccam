@@ -338,7 +338,7 @@ describe('resolveBrowserClientSecret', () => {
 
 describe('rewriteBrowserLoginError', () => {
   it('rewrites invalid_client without a secret as a confidential-client hint', async () => {
-    const { CcamOAuthError } = await import('@ccam/sdk');
+    const { CcamOAuthError } = await import('ccam-sdk');
     const { rewriteBrowserLoginError } = await import('../../commands/auth.js');
     const original = new CcamOAuthError('boom', {
       status: 400, resource: 'auth', operation: 'authorization_code',
@@ -351,7 +351,7 @@ describe('rewriteBrowserLoginError', () => {
   });
 
   it('passes through when a secret was provided', async () => {
-    const { CcamOAuthError } = await import('@ccam/sdk');
+    const { CcamOAuthError } = await import('ccam-sdk');
     const { rewriteBrowserLoginError } = await import('../../commands/auth.js');
     const original = new CcamOAuthError('boom', {
       status: 400, resource: 'auth', operation: 'authorization_code',
@@ -361,7 +361,7 @@ describe('rewriteBrowserLoginError', () => {
   });
 
   it('passes through other OAuth errors', async () => {
-    const { CcamOAuthError } = await import('@ccam/sdk');
+    const { CcamOAuthError } = await import('ccam-sdk');
     const { rewriteBrowserLoginError } = await import('../../commands/auth.js');
     const original = new CcamOAuthError('boom', {
       status: 400, resource: 'auth', operation: 'authorization_code',
