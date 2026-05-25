@@ -191,14 +191,10 @@ jobs:
       - name: Publish ccam-sdk
         if: steps.mode.outputs.dry_run != 'true'
         run: npm publish -w packages/sdk --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish ccam
         if: steps.mode.outputs.dry_run != 'true'
         run: npm publish -w packages/cli --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub release
         if: startsWith(github.ref, 'refs/tags/v') && steps.mode.outputs.dry_run != 'true'
