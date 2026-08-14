@@ -84,6 +84,18 @@ describe('ProfileStore.saveProfile', () => {
     expect(state.credentials.b.refreshToken).toBe('r-b');
   });
 
+  it('stores prototype-named profiles as ordinary entries', async () => {
+    const store = new ProfileStore();
+    await store.saveProfile('__proto__', {
+      config: { host: 'https://am.example', clientId: 'cid' },
+      credentials: { refreshToken: 'r' },
+    });
+    const state = await store.read();
+    expect(Object.getPrototypeOf(state.profiles)).toBeNull();
+    expect(state.profiles.__proto__.clientId).toBe('cid');
+    expect(state.credentials.__proto__.refreshToken).toBe('r');
+  });
+
   it('writes credentials with mode 0600', async () => {
     const store = new ProfileStore();
     await store.saveProfile('default', {
