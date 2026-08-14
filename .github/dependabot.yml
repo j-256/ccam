@@ -8,6 +8,11 @@ updates:
       all-dependencies:
         patterns:
           - "*"
+    ignore:
+      # TypeScript 7 is outside typescript-eslint's supported peer range
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
     commit-message:
       prefix: "chore"
       include: "scope"
