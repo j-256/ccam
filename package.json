@@ -11,7 +11,8 @@
   },
   "scripts": {
     "build": "npm run build -w packages/sdk && npm run build -w packages/cli",
-    "test": "npm run test --workspaces",
+    "check:docs-cover": "node scripts/check-docs-cover.mjs",
+    "test": "npm run check:docs-cover && npm run test --workspaces",
     "lint": "eslint packages/*/src",
     "format": "prettier --write 'packages/*/src/**/*.ts'",
     "test:integration": "npm run test:integration -w packages/sdk",

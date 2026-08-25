@@ -35,6 +35,8 @@ jobs:
           REASON: ${{ inputs.reason }}
         run: echo "**Triggered manually:** $REASON" >> "$GITHUB_STEP_SUMMARY"
       - run: npm ci
+      - name: Check documentation cover
+        run: npm run check:docs-cover
       - name: Lint ccam-sdk
         run: |
           printf '\n**ccam-sdk lint**\n\n' >> "$GITHUB_STEP_SUMMARY"

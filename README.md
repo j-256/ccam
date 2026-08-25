@@ -4,6 +4,8 @@ TypeScript CLI and SDK for the Salesforce Commerce Cloud Account Manager REST AP
 
 The AM API is largely undocumented. **ccam** serves as both a practical tool and a reference implementation for developers working with Commerce Cloud account management.
 
+![The ccam interactive terminal browser showing Account Manager users, status, and keyboard controls](docs/screenshots/cover.png)
+
 ## Why ccam?
 
 ccam is built for people who administer Account Manager: security and compliance teams running access audits, team leads onboarding and offboarding users, and developers integrating AM into their own tooling.
