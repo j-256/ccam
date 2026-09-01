@@ -112,7 +112,23 @@ describe('addGlobalOptions', () => {
     expect(options.some((opt) => opt.long === '--sort')).toBe(true);
     expect(options.some((opt) => opt.long === '--profile')).toBe(true);
     expect(options.some((opt) => opt.long === '--host')).toBe(true);
-    expect(options.some((opt) => opt.short === '-j')).toBe(true);
+    expect(options.find((opt) => opt.long === '--format')?.short).toBe('-f');
+    expect(options.find((opt) => opt.long === '--sort')?.short).toBe('-s');
+    expect(options.find((opt) => opt.long === '--profile')?.short).toBe('-p');
+    expect(options.find((opt) => opt.long === '--json')?.short).toBe('-j');
+  });
+
+  it('keeps short and long global options equivalent', async () => {
+    const parse = async (args: string[]) => {
+      const cmd = addGlobalOptions(new Command());
+      await cmd.parseAsync(['node', 'ccam', ...args]);
+      return cmd.opts();
+    };
+
+    await expect(parse(['-f', 'csv', '-s', 'name:desc', '-p', 'audit', '-j']))
+      .resolves.toEqual(await parse([
+        '--format', 'csv', '--sort', 'name:desc', '--profile', 'audit', '--json',
+      ]));
   });
 
   it('sets default values', () => {

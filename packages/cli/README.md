@@ -95,13 +95,15 @@ ccam user list --org abc123 --format csv > users.csv
 
 | Format | Use case | CLI flag |
 |--------|----------|----------|
-| `table` | Human-readable display (TTY default) | `--format table` |
-| `json` | Machine-readable, piping to jq | `--format json` or `-j` |
-| `csv` | Spreadsheet import, data analysis | `--format csv` |
-| `tsv` | Tab-separated (better for whitespace) | `--format tsv` |
-| `yaml` | Config files, human-readable structured | `--format yaml` |
+| `table` | Human-readable display (TTY default) | `-f table` or `--format table` |
+| `json` | Machine-readable, piping to jq | `-f json`, `--format json`, or `-j` |
+| `csv` | Spreadsheet import, data analysis | `-f csv` or `--format csv` |
+| `tsv` | Tab-separated (better for whitespace) | `-f tsv` or `--format tsv` |
+| `yaml` | Config files, human-readable structured | `-f yaml` or `--format yaml` |
 
 When output is piped (not a TTY), JSON is the default.
+
+Common aliases are `-f, --format`, `-p, --profile`, `-s, --sort`, and `-j, --json`. `--fields`, `--page`, `--size`, and `--host` remain long-only because their first letters belong to the more reusable aliases or to help. Auth login and logout also accept `-p, --profile`; credential and flow selectors remain explicit long options.
 
 ## Resources
 

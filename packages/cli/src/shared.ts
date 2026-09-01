@@ -77,12 +77,12 @@ export function parseExpand<T extends string>(
 
 export function addGlobalOptions(cmd: Command): Command {
   return cmd
-    .option('--format <format>', 'Output format: table, json, csv, tsv, yaml')
+    .option('-f, --format <format>', 'Output format: table, json, csv, tsv, yaml')
     .option('--fields <fields>', 'Comma-separated list of fields to include')
     .option('--page <page>', 'Page number for pagination', '0')
     .option('--size <size>', 'Page size for pagination', '25')
-    .option('--sort <sort>', 'Sort field and direction (e.g., name:asc)')
-    .option('--profile <profile>', 'Profile name from config')
+    .option('-s, --sort <sort>', 'Sort field and direction (e.g., name:asc)')
+    .option('-p, --profile <profile>', 'Profile name from config')
     .option('--host <host>', 'API host URL (default: https://account.demandware.com)')
     .option('-j, --json', 'Shorthand for --format json');
 }

@@ -398,7 +398,7 @@ describe('auth command parsing (commander integration)', () => {
         '--host', 'https://pod5.example',
         '--client-id', 'cid',
         '--client-secret', 'sec',
-        '--profile', 'pod5',
+        '-p', 'pod5',
       ]);
       const profiles = await fs.readFile(path.join(tempDir, 'ccam', 'profiles.yaml'), 'utf8');
       expect(profiles).toContain('host: https://pod5.example');

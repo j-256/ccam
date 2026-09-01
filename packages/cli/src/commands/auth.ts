@@ -18,7 +18,7 @@ export function registerAuthCommands(program: Command): void {
   auth
     .command('login')
     .description('Log in to a profile (browser-based by default)')
-    .option('--profile <name>', 'Profile name')
+    .option('-p, --profile <name>', 'Profile name')
     .option('--host <url>', 'AM host URL')
     .option('--client-id <id>', 'API client ID')
     .option('--client-secret <secret>', 'API client secret')
@@ -36,7 +36,7 @@ export function registerAuthCommands(program: Command): void {
   auth
     .command('logout')
     .description('Remove a profile (defaults to the active profile)')
-    .option('--profile <name>', 'Profile name')
+    .option('-p, --profile <name>', 'Profile name')
     .action(async (_opts, command) => {
       const opts = command.optsWithGlobals();
       try {
