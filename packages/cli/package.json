@@ -1,6 +1,6 @@
 {
   "name": "@j-256/ccam",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "CLI for the Salesforce Commerce Cloud Account Manager API",
   "type": "module",
   "main": "dist/index.js",
@@ -24,7 +24,7 @@
     "access": "public"
   },
   "dependencies": {
-    "ccam-sdk": "0.1.1",
+    "ccam-sdk": "0.2.0",
     "chalk": "^6.0.0",
     "cli-table3": "^0.6.5",
     "commander": "^15.0.0",
