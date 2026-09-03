@@ -1,6 +1,6 @@
 {
   "name": "ccam-sdk",
-  "version": "0.2.0",
+  "version": "1.1.0",
   "description": "Typed SDK for the Salesforce Commerce Cloud Account Manager REST API",
   "type": "module",
   "main": "dist/index.js",
