@@ -10,7 +10,7 @@ import {
   safeDelete,
 } from './helpers.js';
 import { userFields, auditLogFields, roleFields, instanceFields, realmFields } from './field-specs.js';
-import { CcamNotFoundError, UserSortField, type CcamClient } from '../../index.js';
+import { CcamNotFoundError, UserSortField, UserState, type CcamClient } from '../../index.js';
 
 describe.skipIf(!ENV)('users (integration)', () => {
   let client: CcamClient;
@@ -188,16 +188,27 @@ describe.skipIf(!ENV)('users (integration)', () => {
   describe.todo('user-context auth (current(), user-scoped token)');
 
   describe('write (integration)', () => {
-    const mail = `ccam-test-${Date.now()}@ccam-test.example.com`;
     let createdId: string | null = null;
 
     afterAll(async () => {
       if (createdId) {
-        await safeDelete(() => client.users.delete(createdId!));
+        await safeDelete(async () => {
+          const user = await client.users.get(createdId!);
+          if (user.userState !== UserState.DELETED) {
+            await client.users.disable(createdId!);
+          }
+          await client.users.delete(createdId!);
+        });
       }
     });
 
-    it('creates, reads, updates, resets, disables, deletes', async () => {
+    it('creates, reads, updates, disables, deletes', async () => {
+      const domainSeparator = ENV!.userLogin.lastIndexOf('@');
+      if (domainSeparator <= 0 || domainSeparator === ENV!.userLogin.length - 1) {
+        throw new Error('TEST_USER_LOGIN must be an email address');
+      }
+      const emailDomain = ENV!.userLogin.slice(domainSeparator + 1);
+      const mail = `ccam-test-${Date.now()}@${emailDomain}`;
       const created = await client.users.create({
         mail,
         firstName: 'Ccam',
@@ -217,8 +228,9 @@ describe.skipIf(!ENV)('users (integration)', () => {
       });
       expect(updated.displayName).toBe('Ccam Test (updated)');
 
-      await client.users.reset(created.id);
       await client.users.disable(created.id);
+      const disabled = await client.users.get(created.id);
+      expect(disabled.userState).toBe(UserState.DELETED);
 
       await client.users.delete(created.id);
       createdId = null;
