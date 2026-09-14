@@ -18,7 +18,8 @@
     "test:integration": "npm run test:integration -w packages/sdk",
     "preversion": "scripts/preversion.sh",
     "version": "node scripts/version-sync.mjs",
-    "postversion": "scripts/postversion.sh"
+    "postversion": "scripts/postversion.sh",
+    "capture:cover": "npm run build && node tools/cover/capture.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
