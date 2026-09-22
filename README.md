@@ -210,6 +210,10 @@ Add `--modified-after <date>` with `--role` to filter by modification date.
 
 The cover runs the actual Ink TUI with a synthetic organization client, then renders its terminal frame. It does not load credentials or call Account Manager. Install the capture tooling with `npm ci --prefix tools/cover` and `npm exec --prefix tools/cover -- playwright install chromium`, then run `npm run capture:cover`. Use `-- --output FILE` to write a review image elsewhere. CI captures during source verification and retains the image as an artifact. Successful main builds publish a changed `docs/screenshots/cover.png` with an image-only commit; pull requests render without publishing, and superseded revisions skip publication.
 
+## Cover image density
+
+The project cover is rendered at 4x pixel density while preserving its logical viewport, so enlarged previews retain more detail. Higher density does not increase the displayed text size; use zoom to inspect small labels.
+
 ## License
 
 MIT
