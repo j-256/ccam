@@ -1,5 +1,7 @@
 # ccam vs. b2c-cli
 
+> **Historical comparison:** ccam and ccam-sdk are retired. Use [`@salesforce/b2c-cli`](https://github.com/SalesforceCommerceCloud/b2c-developer-tooling) and consult its [Account Manager guide](https://salesforcecommercecloud.github.io/b2c-developer-tooling/guide/account-manager.html) for migration. The feature and authentication comparisons below are preserved as historical context and are no longer maintained.
+
 [b2c-cli](https://github.com/SalesforceCommerceCloud/b2c-developer-tooling) is Salesforce's new official Commerce Cloud CLI, released GA in 2026. It ships under `@salesforce/b2c-cli` alongside an SDK (`@salesforce/b2c-tooling-sdk`), an MCP server, a VS Code extension, and GitHub Action workflow templates. It is on track to supersede sfcc-ci -- the two share on-disk auth storage and b2c-cli's `auth:login` / `auth:logout` are documented as sfcc-ci replacements.
 
 ccam is an AM-focused administration CLI and SDK, with deeper coverage of the AM surface than any other tool today.

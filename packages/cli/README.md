@@ -1,5 +1,14 @@
 # @j-256/ccam
 
+> **Retired:** This CLI is no longer maintained. Use [`@salesforce/b2c-cli`](https://github.com/SalesforceCommerceCloud/b2c-developer-tooling) for Account Manager API operations and broader B2C Commerce tooling.
+
+```bash
+npm install -g @salesforce/b2c-cli
+b2c am --help
+```
+
+Use the [Account Manager guide](https://salesforcecommercecloud.github.io/b2c-developer-tooling/guide/account-manager.html) and [AM command reference](https://salesforcecommercecloud.github.io/b2c-developer-tooling/cli/account-manager.html) to update commands and authentication. The documentation below describes retired ccam releases; check upstream support for the operations your scripts require.
+
 Command-line tool for the Salesforce Commerce Cloud Account Manager REST API.
 
 The AM API is largely undocumented. **ccam** gives Account Manager administrators a tool that covers every resource, every subresource, and every finder -- exportable to CSV/TSV/YAML/JSON for audits, automation, and integrations.

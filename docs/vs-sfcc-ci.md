@@ -1,5 +1,7 @@
 # ccam vs. sfcc-ci
 
+> **Historical comparison:** ccam and ccam-sdk are retired. Use [`@salesforce/b2c-cli`](https://github.com/SalesforceCommerceCloud/b2c-developer-tooling) and consult its [Account Manager guide](https://salesforcecommercecloud.github.io/b2c-developer-tooling/guide/account-manager.html) for migration. The recommendations and feature comparisons below are preserved as historical context and are no longer maintained.
+
 [sfcc-ci](https://github.com/SalesforceCommerceCloud/sfcc-ci) is the de facto CLI for Commerce Cloud. It lives under the `SalesforceCommerceCloud` GitHub org but is community-supported, not an official Salesforce product. It exists to support CI/CD: deploy code, run jobs, import data, manage sandboxes. It ships a handful of Account Manager commands -- enough to provision a client or grant a role from a pipeline.
 
 ccam is a Commerce Cloud Account Manager CLI and SDK. Its scope is AM and only AM. Every AM endpoint is covered, every resource is typed, and the output formats are built for audits and reports, not pipeline plumbing.

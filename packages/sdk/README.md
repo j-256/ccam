@@ -1,5 +1,9 @@
 # ccam-sdk
 
+> **Retired:** This SDK is no longer maintained. For programmatic Account Manager access, see [`@salesforce/b2c-tooling-sdk`](https://github.com/SalesforceCommerceCloud/b2c-developer-tooling/tree/main/packages/b2c-tooling-sdk). For CLI use, install [`@salesforce/b2c-cli`](https://github.com/SalesforceCommerceCloud/b2c-developer-tooling), which provides Account Manager commands and broader B2C Commerce tooling.
+
+Update SDK calls and authentication using the upstream documentation, and check support for the operations your integration requires. The API and usage documentation below describe retired ccam-sdk releases.
+
 Typed TypeScript SDK for the [Salesforce Commerce Cloud Account Manager](https://account.demandware.com) REST API.
 
 The AM API is largely undocumented. `ccam-sdk` is a first-class, documented TypeScript library covering every AM resource: users, organizations, API clients, roles, realms, permissions, service types, org configurations, and instances. It powers the [`@j-256/ccam`](https://www.npmjs.com/package/@j-256/ccam) CLI but is also designed for direct use in your own tooling.
